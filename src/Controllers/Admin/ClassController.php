@@ -173,7 +173,7 @@ final class ClassController
         return Validator::check($data, [
             'name'        => ['required', 'min:2', 'max:190'],
             'description' => ['required', 'min:5'],
-        ]);
+        ]) ?? [];
     }
 
     private function slugify(string $text): string
