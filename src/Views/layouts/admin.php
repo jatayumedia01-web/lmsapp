@@ -32,7 +32,15 @@ $navItems = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title><?= View::e($title ?? 'Devithor Admin') ?> · Devithor</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <?php
+    // Cache-bust admin assets by mtime so browsers fetch a fresh copy after
+    // each deploy (the public .htaccess marks them `immutable` for perf).
+    $cssPath = __DIR__ . '/../../../public/assets/css/admin.css';
+    $jsPath  = __DIR__ . '/../../../public/assets/js/admin.js';
+    $cssVer  = file_exists($cssPath) ? filemtime($cssPath) : '1';
+    $jsVer   = file_exists($jsPath)  ? filemtime($jsPath)  : '1';
+    ?>
+    <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $cssVer ?>">
 </head>
 <body>
 <div class="layout">
@@ -71,6 +79,6 @@ $navItems = [
         <?= $content ?>
     </main>
 </div>
-<script src="/assets/js/admin.js"></script>
+<script src="/assets/js/admin.js?v=<?= $jsVer ?>"></script>
 </body>
 </html>
