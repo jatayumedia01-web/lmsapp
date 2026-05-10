@@ -513,7 +513,7 @@ ob_start();
     </table>
     <?php endif; ?>
 </div>
-<?php
+
 <script>
 // Poll the live-online counter every 15s. Skip if the tab is hidden so we
 // don't keep the server warm on stale tabs.
