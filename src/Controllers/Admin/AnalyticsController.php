@@ -23,49 +23,40 @@ final class AnalyticsController
 {
     public function overview(Request $req): never
     {
-        $today    = date('Y-m-d');
+        $today     = date('Y-m-d');
         $yesterday = date('Y-m-d', strtotime('-1 day'));
-        $weekAgo  = date('Y-m-d', strtotime('-7 days'));
-        $monthAgo = date('Y-m-d', strtotime('-30 days'));
+        $weekAgo   = date('Y-m-d', strtotime('-7 days'));
+        $monthAgo  = date('Y-m-d', strtotime('-30 days'));
+        $prevMonth = date('Y-m-d', strtotime('-60 days'));
 
-        $stats = [
-            'dau'             => (int) Database::scalar(
-                'SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ?',
-                [$today . ' 00:00:00'],
-            ),
-            'wau'             => (int) Database::scalar(
-                'SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ?',
-                [$weekAgo . ' 00:00:00'],
-            ),
-            'mau'             => (int) Database::scalar(
-                'SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ?',
-                [$monthAgo . ' 00:00:00'],
-            ),
-            'sessions_today'  => (int) Database::scalar(
-                'SELECT COUNT(*) FROM user_sessions WHERE started_at >= ?',
-                [$today . ' 00:00:00'],
-            ),
-            'events_today'    => (int) Database::scalar(
-                'SELECT COUNT(*) FROM user_events WHERE occurred_at >= ?',
-                [$today . ' 00:00:00'],
-            ),
-            'avg_session_today_seconds' => (int) (Database::scalar(
-                'SELECT COALESCE(AVG(duration_seconds), 0) FROM user_sessions
-                 WHERE started_at >= ? AND duration_seconds > 0',
-                [$today . ' 00:00:00'],
-            ) ?? 0),
-            'devices_count'   => (int) Database::scalar('SELECT COUNT(*) FROM user_devices'),
-            'failed_logins_24h' => (int) Database::scalar(
-                'SELECT COUNT(*) FROM user_login_history
-                 WHERE success = 0 AND attempted_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)',
-            ),
+        // ---- Hero stats with prior-window deltas -----------------------
+        $thisWindow = [
+            'dau'      => (int) Database::scalar('SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ?', [$today . ' 00:00:00']),
+            'mau'      => (int) Database::scalar('SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ?', [$monthAgo . ' 00:00:00']),
+            'sessions' => (int) Database::scalar('SELECT COUNT(*) FROM user_sessions WHERE started_at >= ?', [$weekAgo . ' 00:00:00']),
+            'revenue'  => (int) (Database::scalar('SELECT COALESCE(SUM(amount_cents), 0) FROM invoices WHERE status = "PAID" AND date_millis >= UNIX_TIMESTAMP(?) * 1000', [$monthAgo . ' 00:00:00']) ?? 0),
+            'subs'     => (int) Database::scalar('SELECT COUNT(*) FROM subscriptions WHERE status IN ("ACTIVE", "TRIALING")'),
+            'events'   => (int) Database::scalar('SELECT COUNT(*) FROM user_events WHERE occurred_at >= ?', [$today . ' 00:00:00']),
+        ];
+        $prevWindow = [
+            'dau'      => (int) Database::scalar('SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ? AND occurred_at < ?', [$yesterday . ' 00:00:00', $today . ' 00:00:00']),
+            'mau'      => (int) Database::scalar('SELECT COUNT(DISTINCT user_id) FROM user_events WHERE occurred_at >= ? AND occurred_at < ?', [$prevMonth . ' 00:00:00', $monthAgo . ' 00:00:00']),
+            'sessions' => (int) Database::scalar('SELECT COUNT(*) FROM user_sessions WHERE started_at >= ? AND started_at < ?', [date('Y-m-d', strtotime('-14 days')) . ' 00:00:00', $weekAgo . ' 00:00:00']),
+            'revenue'  => (int) (Database::scalar('SELECT COALESCE(SUM(amount_cents), 0) FROM invoices WHERE status = "PAID" AND date_millis >= UNIX_TIMESTAMP(?) * 1000 AND date_millis < UNIX_TIMESTAMP(?) * 1000', [$prevMonth . ' 00:00:00', $monthAgo . ' 00:00:00']) ?? 0),
         ];
 
-        // 14-day trend for the line chart. Prefer aggregates; fall back to raw.
+        $deltas = [
+            'dau'      => $this->pctDelta($thisWindow['dau'],      $prevWindow['dau']),
+            'mau'      => $this->pctDelta($thisWindow['mau'],      $prevWindow['mau']),
+            'sessions' => $this->pctDelta($thisWindow['sessions'], $prevWindow['sessions']),
+            'revenue'  => $this->pctDelta($thisWindow['revenue'],  $prevWindow['revenue']),
+        ];
+
+        // ---- 30-day trend (DAU + sessions for stacked area) ------------
         $trend = Database::all(
             'SELECT `date`, dau, sessions_count, events_count
              FROM analytics_daily
-             WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+             WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
              ORDER BY `date` ASC',
         );
         if (empty($trend)) {
@@ -75,37 +66,74 @@ final class AnalyticsController
                         0 AS sessions_count,
                         COUNT(*) AS events_count
                  FROM user_events
-                 WHERE occurred_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+                 WHERE occurred_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                  GROUP BY DATE(occurred_at)
                  ORDER BY `date` ASC',
             );
         }
+        // Pad with zeros for any missing day so the chart x-axis stays uniform.
+        $trend = $this->padDailyZeros($trend, 30);
 
-        $topEvents = Database::all(
-            'SELECT event_name, COUNT(*) AS c
-             FROM user_events
-             WHERE occurred_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-             GROUP BY event_name ORDER BY c DESC LIMIT 10',
-        );
-
-        $platformBreakdown = Database::all(
+        // ---- Donut data: platform breakdown ----------------------------
+        $platforms = Database::all(
             'SELECT platform, COUNT(*) AS c FROM user_devices GROUP BY platform ORDER BY c DESC',
         );
 
-        $countryBreakdown = Database::all(
+        // ---- Geography: top countries with %share ----------------------
+        $countries = Database::all(
             'SELECT country_code, country, COUNT(DISTINCT user_id) AS users_count
              FROM user_sessions
              WHERE country_code IS NOT NULL AND started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
              GROUP BY country_code, country
-             ORDER BY users_count DESC LIMIT 10',
+             ORDER BY users_count DESC LIMIT 6',
         );
 
+        // ---- Recent activity (latest events feed) ----------------------
+        $recentActivity = Database::all(
+            'SELECT e.event_name, e.screen, e.occurred_at,
+                    u.id AS user_id, u.full_name, u.email,
+                    c.title AS course_title, l.title AS lesson_title
+             FROM user_events e
+             LEFT JOIN users   u ON u.id = e.user_id
+             LEFT JOIN courses c ON c.id = e.course_id
+             LEFT JOIN lessons l ON l.id = e.lesson_id
+             ORDER BY e.occurred_at DESC LIMIT 12',
+        );
+
+        // ---- Top events ------------------------------------------------
+        $topEvents = Database::all(
+            'SELECT event_name, COUNT(*) AS c
+             FROM user_events
+             WHERE occurred_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+             GROUP BY event_name ORDER BY c DESC LIMIT 6',
+        );
+
+        // ---- Latest enrollments (the "recent orders" panel) ------------
+        $recentEnrollments = Database::all(
+            'SELECT e.*, u.full_name, u.email, c.title AS course_title, c.cover_color_hex
+             FROM enrollments e
+             LEFT JOIN users   u ON u.id = e.user_id
+             LEFT JOIN courses c ON c.id = e.course_id
+             ORDER BY e.enrolled_at DESC LIMIT 6',
+        );
+
+        $secondaryStats = [
+            'avg_session' => (int) (Database::scalar('SELECT COALESCE(AVG(duration_seconds), 0) FROM user_sessions WHERE duration_seconds > 0 AND started_at >= ?', [$monthAgo . ' 00:00:00']) ?? 0),
+            'failed_logins_24h' => (int) Database::scalar('SELECT COUNT(*) FROM user_login_history WHERE success = 0 AND attempted_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)'),
+            'devices_total' => (int) Database::scalar('SELECT COUNT(*) FROM user_devices'),
+            'lessons_today' => (int) Database::scalar('SELECT COUNT(*) FROM user_events WHERE event_name = "lesson_started" AND occurred_at >= ?', [$today . ' 00:00:00']),
+        ];
+
         Response::html(View::render('admin/analytics/overview', [
-            'stats'             => $stats,
+            'current'           => $thisWindow,
+            'deltas'            => $deltas,
             'trend'             => $trend,
+            'platforms'         => $platforms,
+            'countries'         => $countries,
+            'recentActivity'    => $recentActivity,
             'topEvents'         => $topEvents,
-            'platformBreakdown' => $platformBreakdown,
-            'countryBreakdown'  => $countryBreakdown,
+            'recentEnrollments' => $recentEnrollments,
+            'secondary'         => $secondaryStats,
             'me'                => $req->params['user'],
             'page'              => 'analytics',
         ]));
@@ -297,5 +325,37 @@ final class AnalyticsController
             'me'         => $req->params['user'],
             'page'       => 'users',
         ]));
+    }
+
+    // ---- helpers --------------------------------------------------------
+
+    /** @return array{value:float, dir:'up'|'down'|'flat'} */
+    private function pctDelta(int $current, int $previous): array
+    {
+        if ($previous === 0) {
+            return ['value' => $current > 0 ? 100.0 : 0.0, 'dir' => $current > 0 ? 'up' : 'flat'];
+        }
+        $delta = (($current - $previous) / $previous) * 100;
+        return [
+            'value' => abs(round($delta, 1)),
+            'dir'   => $delta > 0 ? 'up' : ($delta < 0 ? 'down' : 'flat'),
+        ];
+    }
+
+    /**
+     * Fill any missing day in $rows with a zero row so the area chart x-axis
+     * has uniform spacing (otherwise an idle day would visually compress).
+     */
+    private function padDailyZeros(array $rows, int $days): array
+    {
+        $byDate = [];
+        foreach ($rows as $r) $byDate[(string) $r['date']] = $r;
+
+        $out = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-$i days"));
+            $out[] = $byDate[$d] ?? ['date' => $d, 'dau' => 0, 'sessions_count' => 0, 'events_count' => 0];
+        }
+        return $out;
     }
 }
