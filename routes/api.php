@@ -12,6 +12,9 @@ use Devithor\Controllers\Api\AuthController;
 use Devithor\Controllers\Api\CourseController;
 use Devithor\Controllers\Api\LessonController;
 use Devithor\Controllers\Api\TrackingController;
+use Devithor\Controllers\Api\QuizController as ApiQuiz;
+use Devithor\Controllers\Api\NoteController as ApiNote;
+use Devithor\Controllers\Api\NotificationApiController as ApiNotif;
 
 // ---- Public (no auth) ---------------------------------------------------
 $router->get('/api/v1/health', fn () => \Devithor\Response::json(['status' => 'ok', 'time' => date('c')]));
@@ -34,4 +37,22 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
     $r->post('/track/batch',               [TrackingController::class, 'batchEvents']);
     $r->post('/track/session/start',       [TrackingController::class, 'sessionStart']);
     $r->post('/track/session/end',         [TrackingController::class, 'sessionEnd']);
+
+    // Quizzes (mobile)
+    $r->get('/quizzes/{id}',               [ApiQuiz::class, 'show']);
+    $r->post('/quizzes/{id}/attempts',     [ApiQuiz::class, 'startAttempt']);
+    $r->post('/quizzes/attempts/{id}/answer', [ApiQuiz::class, 'answer']);
+    $r->post('/quizzes/attempts/{id}/submit', [ApiQuiz::class, 'submit']);
+
+    // Notes
+    $r->get('/lessons/{id}/notes',         [ApiNote::class, 'forLesson']);
+    $r->post('/notes',                     [ApiNote::class, 'create']);
+    $r->post('/notes/{id}',                [ApiNote::class, 'update']);
+    $r->post('/notes/{id}/delete',         [ApiNote::class, 'delete']);
+
+    // Notifications inbox
+    $r->get('/notifications',              [ApiNotif::class, 'inbox']);
+    $r->post('/notifications/{id}/read',   [ApiNotif::class, 'markRead']);
+    $r->post('/notifications/read-all',    [ApiNotif::class, 'markAllRead']);
+    $r->post('/notifications/{id}/delete', [ApiNotif::class, 'delete']);
 });

@@ -18,6 +18,13 @@ use Devithor\Controllers\Admin\AnalyticsController as AdminAnalytics;
 use Devithor\Controllers\Admin\ClassController as AdminClass;
 use Devithor\Controllers\Admin\FaqController    as AdminFaq;
 use Devithor\Controllers\Admin\VideoUploadController as AdminUpload;
+use Devithor\Controllers\Admin\QuizController        as AdminQuiz;
+use Devithor\Controllers\Admin\CertificateController as AdminCert;
+use Devithor\Controllers\Admin\NotificationController as AdminNotif;
+use Devithor\Controllers\PublicController            as PublicCtl;
+
+// ---- Public certificate verify ---------------------------------------
+$router->get('/verify/{number}',       [PublicCtl::class, 'verifyCertificate']);
 
 // ---- Login (public) -----------------------------------------------------
 $router->get('/admin',                 fn () => \Devithor\Response::redirect('/admin/login'));
@@ -103,6 +110,33 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     // ---- Settings ----------------------------------------------------
     $r->get('/settings',                         [AdminSettings::class, 'index']);
     $r->post('/settings',                        [AdminSettings::class, 'update']);
+
+    // ---- Quizzes -----------------------------------------------------
+    $r->get('/quizzes',                            [AdminQuiz::class, 'index']);
+    $r->get('/quizzes/new',                        [AdminQuiz::class, 'showCreate']);
+    $r->post('/quizzes',                           [AdminQuiz::class, 'create']);
+    $r->post('/quizzes/questions/{id}/delete',     [AdminQuiz::class, 'questionDelete']);
+    $r->post('/quizzes/questions/{id}/reorder',    [AdminQuiz::class, 'questionReorder']);
+    $r->get('/quizzes/{id}/questions',             [AdminQuiz::class, 'questions']);
+    $r->post('/quizzes/{id}/questions',            [AdminQuiz::class, 'questionCreate']);
+    $r->get('/quizzes/{id}/attempts',              [AdminQuiz::class, 'attempts']);
+    $r->get('/quizzes/{id}',                       [AdminQuiz::class, 'showEdit']);
+    $r->post('/quizzes/{id}',                      [AdminQuiz::class, 'update']);
+    $r->post('/quizzes/{id}/delete',               [AdminQuiz::class, 'delete']);
+
+    // ---- Certificates ------------------------------------------------
+    $r->get('/certificates',                       [AdminCert::class, 'index']);
+    $r->get('/certificates/templates/new',         [AdminCert::class, 'templateNew']);
+    $r->post('/certificates/templates',            [AdminCert::class, 'templateCreate']);
+    $r->get('/certificates/templates/{id}/preview',[AdminCert::class, 'templatePreview']);
+    $r->get('/certificates/templates/{id}',        [AdminCert::class, 'templateEdit']);
+    $r->post('/certificates/templates/{id}',       [AdminCert::class, 'templateUpdate']);
+    $r->post('/certificates/templates/{id}/delete',[AdminCert::class, 'templateDelete']);
+    $r->post('/certificates/{id}/revoke',          [AdminCert::class, 'revoke']);
+
+    // ---- Notifications -----------------------------------------------
+    $r->get('/notifications',                      [AdminNotif::class, 'index']);
+    $r->post('/notifications',                     [AdminNotif::class, 'send']);
 
     // ---- Analytics ---------------------------------------------------
     $r->get('/analytics',                        [AdminAnalytics::class, 'overview']);
