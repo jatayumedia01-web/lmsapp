@@ -4,6 +4,27 @@
 /** @var array $me     admin user row */
 /** @var string $content rendered page body */
 use Devithor\View;
+
+$navItems = [
+    ['main',
+        ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => '◈', 'href' => '/admin/dashboard'],
+    ],
+    ['Catalog',
+        ['key' => 'courses',  'label' => 'Courses',  'icon' => '▤', 'href' => '/admin/courses', 'aliases' => ['lessons']],
+    ],
+    ['People',
+        ['key' => 'users',    'label' => 'Users',    'icon' => '◉', 'href' => '/admin/users'],
+    ],
+    ['Revenue',
+        ['key' => 'billing',  'label' => 'Billing',  'icon' => '◊', 'href' => '/admin/billing'],
+    ],
+    ['Community',
+        ['key' => 'qa',       'label' => 'Q&A moderation', 'icon' => '✦', 'href' => '/admin/qa'],
+    ],
+    ['System',
+        ['key' => 'settings', 'label' => 'Settings', 'icon' => '⚙', 'href' => '/admin/settings'],
+    ],
+];
 ?><!doctype html>
 <html lang="en">
 <head>
@@ -18,31 +39,31 @@ use Devithor\View;
     <aside class="sidebar">
         <div class="brand">
             <h1>Devithor</h1>
-            <small class="text-muted">LMS admin</small>
+            <small>LMS admin</small>
         </div>
         <nav>
-            <a href="/admin/dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
-
-            <div class="nav-group">Catalog</div>
-            <a href="/admin/courses"   class="<?= in_array($page, ['courses', 'lessons'], true) ? 'active' : '' ?>">Courses</a>
-
-            <div class="nav-group">People</div>
-            <a href="/admin/users"     class="<?= $page === 'users' ? 'active' : '' ?>">Users</a>
-
-            <div class="nav-group">Revenue</div>
-            <a href="/admin/billing"   class="<?= $page === 'billing' ? 'active' : '' ?>">Billing</a>
-
-            <div class="nav-group">Community</div>
-            <a href="/admin/qa"        class="<?= $page === 'qa' ? 'active' : '' ?>">Q&amp;A moderation</a>
-
-            <div class="nav-group">System</div>
-            <a href="/admin/settings"  class="<?= $page === 'settings' ? 'active' : '' ?>">Settings</a>
+            <?php foreach ($navItems as $i => $section): ?>
+                <?php $groupName = array_shift($section); ?>
+                <?php if ($groupName !== 'main'): ?>
+                    <div class="nav-group"><?= View::e($groupName) ?></div>
+                <?php endif; ?>
+                <?php foreach ($section as $item): ?>
+                    <?php
+                    $isActive = $page === $item['key']
+                        || (isset($item['aliases']) && in_array($page, $item['aliases'], true));
+                    ?>
+                    <a href="<?= View::e($item['href']) ?>" class="<?= $isActive ? 'active' : '' ?>">
+                        <span class="nav-icon"><?= View::e($item['icon']) ?></span>
+                        <?= View::e($item['label']) ?>
+                    </a>
+                <?php endforeach; ?>
+            <?php endforeach; ?>
         </nav>
-        <div style="padding:16px 20px; margin-top:auto; border-top:1px solid var(--border)">
-            <div class="text-muted" style="font-size:12px">Signed in as</div>
-            <div style="font-weight:600"><?= View::e($me['full_name']) ?></div>
-            <form method="post" action="/admin/logout" class="mt-2">
-                <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+        <div class="sidebar-footer">
+            <div class="me-label">Signed in as</div>
+            <div class="me-name"><?= View::e($me['full_name']) ?></div>
+            <form method="post" action="/admin/logout" class="mb-0">
+                <button class="btn btn-ghost btn-sm" type="submit">Sign out →</button>
             </form>
         </div>
     </aside>
