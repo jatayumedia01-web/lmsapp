@@ -57,6 +57,9 @@ final class Router
             }
             if (preg_match($route['regex'], $request->path, $matches)) {
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                // URL-decode so route params with spaces/non-ASCII are matched
+                // against DB rows by their human form, not their %xx encoding.
+                $params = array_map('rawurldecode', $params);
                 $request->params = $params;
 
                 // Run middleware. Each receives the request and a continuation;
