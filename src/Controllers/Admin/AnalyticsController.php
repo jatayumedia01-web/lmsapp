@@ -221,7 +221,7 @@ final class AnalyticsController
         //   sessions × 2  +  unique_days × 5  +  events / 10
         $leaderboard = Database::all(
             'SELECT u.id, u.full_name, u.email,
-                    COUNT(DISTINCT s.id)               AS sessions_count,
+                    COUNT(DISTINCT s.id)                AS sessions_count,
                     COUNT(DISTINCT DATE(e.occurred_at)) AS active_days,
                     COUNT(e.id)                         AS events_count,
                     COALESCE(SUM(s.duration_seconds), 0) AS total_seconds
@@ -232,8 +232,10 @@ final class AnalyticsController
                 ON e.user_id = u.id AND e.occurred_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
              WHERE u.role = ?
              GROUP BY u.id, u.full_name, u.email
-             HAVING events_count > 0
-             ORDER BY (sessions_count * 2 + active_days * 5 + events_count / 10) DESC
+             HAVING COUNT(e.id) > 0
+             ORDER BY (COUNT(DISTINCT s.id) * 2
+                      + COUNT(DISTINCT DATE(e.occurred_at)) * 5
+                      + COUNT(e.id) / 10) DESC
              LIMIT 20',
             ['STUDENT'],
         );
