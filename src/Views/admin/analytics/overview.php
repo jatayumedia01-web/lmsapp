@@ -8,6 +8,10 @@
 /** @var array $topEvents */
 /** @var array $recentEnrollments */
 /** @var array $secondary */
+/** @var int $onlineNow */
+/** @var array $heatmap */
+/** @var array $anomalies */
+/** @var int $rangeDays */
 /** @var array $me */
 /** @var string $page */
 use Devithor\View;
@@ -111,9 +115,40 @@ ob_start();
         <p>Live behavior, geography &amp; device insights · <?= date('M j, Y · H:i') ?></p>
     </div>
     <div class="spacer"></div>
-    <a href="/admin/analytics/events"  class="btn btn-ghost btn-sm">Event log →</a>
-    <a href="/admin/analytics/logins"  class="btn btn-ghost btn-sm">Login audit →</a>
+    <div class="live-pill" title="Users active in the last 5 minutes">
+        <span class="live-dot"></span>
+        <span class="live-label">Live</span>
+        <strong id="online-count"><?= number_format($onlineNow) ?></strong>
+        <span class="text-muted">online</span>
+    </div>
+    <form method="get" class="range-picker">
+        <select name="days" onchange="this.form.submit()">
+            <?php foreach ([7, 14, 30, 60, 90, 180] as $d): ?>
+                <option value="<?= $d ?>" <?= $rangeDays === $d ? 'selected' : '' ?>>Last <?= $d ?>d</option>
+            <?php endforeach; ?>
+        </select>
+    </form>
 </header>
+
+<nav class="tabs" style="margin-bottom:20px">
+    <a href="/admin/analytics?days=<?= $rangeDays ?>" class="tab active">Overview</a>
+    <a href="/admin/analytics/engagement" class="tab">Engagement</a>
+    <a href="/admin/analytics/cohorts" class="tab">Cohorts</a>
+    <a href="/admin/analytics/geography" class="tab">Geography</a>
+    <a href="/admin/analytics/devices" class="tab">Devices</a>
+    <a href="/admin/analytics/events" class="tab">Event log</a>
+    <a href="/admin/analytics/logins" class="tab">Login audit</a>
+</nav>
+
+<?php if (!empty($anomalies)): ?>
+    <?php foreach ($anomalies as $a): ?>
+        <div class="alert alert-<?= View::e($a['kind']) ?>" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">⚠</span>
+            <strong>Anomaly detected:</strong>
+            <span><?= View::e($a['msg']) ?></span>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <!-- Hero stat cards row -->
 <div class="hero-stats">
@@ -356,6 +391,75 @@ ob_start();
 </div>
 <?php endif; ?>
 
+<!-- Activity heatmap (GitHub style) -->
+<div class="card">
+    <div class="card-header flex-row">
+        <div>
+            <h3 style="margin-bottom:2px">Activity heatmap</h3>
+            <p class="text-muted" style="margin:0;font-size:12px">Events per day · last 12 weeks</p>
+        </div>
+        <div class="spacer"></div>
+        <div class="heatmap-legend">
+            <span class="text-muted" style="font-size:11px">Less</span>
+            <span class="heat-cell heat-0"></span>
+            <span class="heat-cell heat-1"></span>
+            <span class="heat-cell heat-2"></span>
+            <span class="heat-cell heat-3"></span>
+            <span class="heat-cell heat-4"></span>
+            <span class="text-muted" style="font-size:11px">More</span>
+        </div>
+    </div>
+    <?php
+    $heatmapMax = max(array_column($heatmap, 'count')) ?: 1;
+    $heatBucket = function (int $c) use ($heatmapMax): int {
+        if ($c === 0) return 0;
+        $ratio = $c / $heatmapMax;
+        if ($ratio < 0.25) return 1;
+        if ($ratio < 0.5)  return 2;
+        if ($ratio < 0.75) return 3;
+        return 4;
+    };
+    // Group into columns of 7 (one column per week, rows = Sun..Sat)
+    $columns = []; $col = [];
+    foreach ($heatmap as $i => $cell) {
+        $col[] = $cell;
+        if ($cell['dow'] === 6 || $i === count($heatmap) - 1) {
+            $columns[] = $col;
+            $col = [];
+        }
+    }
+    ?>
+    <div class="heatmap-wrap">
+        <div class="heatmap-rows">
+            <span></span>
+            <span class="heat-row-label">Mon</span>
+            <span></span>
+            <span class="heat-row-label">Wed</span>
+            <span></span>
+            <span class="heat-row-label">Fri</span>
+            <span></span>
+        </div>
+        <div class="heatmap-grid">
+            <?php foreach ($columns as $weekCol): ?>
+                <div class="heat-week">
+                    <?php for ($d = 0; $d < 7; $d++): ?>
+                        <?php $cell = null; foreach ($weekCol as $c) { if ($c['dow'] === $d) { $cell = $c; break; } } ?>
+                        <?php if ($cell): ?>
+                            <span class="heat-cell heat-<?= $heatBucket($cell['count']) ?>"
+                                  title="<?= View::e($cell['date']) ?>: <?= number_format($cell['count']) ?> events"></span>
+                        <?php else: ?>
+                            <span class="heat-cell heat-empty"></span>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="text-right text-muted" style="font-size:11px;margin-top:6px">
+        Total: <?= number_format(array_sum(array_column($heatmap, 'count'))) ?> events in 12 weeks
+    </div>
+</div>
+
 <!-- Recent enrollments table -->
 <div class="card">
     <div class="card-header flex-row">
@@ -409,6 +513,26 @@ ob_start();
     </table>
     <?php endif; ?>
 </div>
+<?php
+<script>
+// Poll the live-online counter every 15s. Skip if the tab is hidden so we
+// don't keep the server warm on stale tabs.
+(function () {
+    var el = document.getElementById('online-count');
+    if (!el) return;
+    setInterval(function () {
+        if (document.hidden) return;
+        fetch('/admin/analytics/live.json', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && typeof data.online_now === 'number') {
+                    el.textContent = data.online_now.toLocaleString();
+                }
+            })
+            .catch(function () { /* swallow — best-effort */ });
+    }, 15000);
+})();
+</script>
 <?php
 $content = ob_get_clean();
 $title   = 'Analytics';

@@ -86,6 +86,9 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
 
     // ---- Analytics ---------------------------------------------------
     $r->get('/analytics',                        [AdminAnalytics::class, 'overview']);
+    $r->get('/analytics/live.json',              [AdminAnalytics::class, 'liveJson']);
+    $r->get('/analytics/engagement',             [AdminAnalytics::class, 'engagement']);
+    $r->get('/analytics/cohorts',                [AdminAnalytics::class, 'cohorts']);
     $r->get('/analytics/geography',              [AdminAnalytics::class, 'geography']);
     $r->get('/analytics/devices',                [AdminAnalytics::class, 'devices']);
     $r->get('/analytics/events',                 [AdminAnalytics::class, 'events']);
