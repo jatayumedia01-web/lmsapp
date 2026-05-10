@@ -70,6 +70,43 @@ final class Auth
         Database::exec('DELETE FROM auth_tokens WHERE token_hash = ?', [hash('sha256', $token)]);
     }
 
+    /**
+     * Append one row to user_login_history. Captures IP + geo + UA so the
+     * admin "user activity" view can flag impossible-travel logins.
+     *
+     * Failures here must never break the login flow — the table is created
+     * by migration 008 but might be missing on older deploys.
+     */
+    public static function logLogin(
+        ?string $userId,
+        ?string $emailAttempted,
+        string $method,
+        string $surface,
+        bool $success,
+        ?string $failureReason = null,
+    ): void {
+        try {
+            $ip  = Geolocation::clientIp();
+            $geo = Geolocation::lookup($ip);
+            Database::exec(
+                'INSERT INTO user_login_history
+                    (user_id, email_attempted, method, surface,
+                     ip_address, country_code, country, city,
+                     user_agent, success, failure_reason)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $userId, $emailAttempted, $method, $surface,
+                    $ip, $geo['country_code'], $geo['country'], $geo['city'],
+                    substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 500),
+                    $success ? 1 : 0,
+                    $failureReason !== null ? substr($failureReason, 0, 100) : null,
+                ],
+            );
+        } catch (\Throwable $e) {
+            // Logging is best-effort; never block the login on a side-channel failure.
+        }
+    }
+
     /** Hash a password for the users table. Uses PHP's preferred algorithm. */
     public static function hashPassword(string $plain): string
     {

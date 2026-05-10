@@ -36,6 +36,7 @@ final class AuthController
         );
 
         if (!$user || !$user['password_hash'] || !Auth::verifyPassword($password, $user['password_hash'])) {
+            Auth::logLogin($user['id'] ?? null, $email, 'PASSWORD', 'ADMIN', false, 'invalid_credentials');
             // Constant-ish failure regardless of which field was wrong — don't
             // help an attacker enumerate valid emails.
             $_SESSION['flash_error'] = 'Email or password is incorrect.';
@@ -47,6 +48,7 @@ final class AuthController
         $_SESSION['admin_user_id'] = $user['id'];
 
         Database::exec('UPDATE users SET last_sign_in_at = NOW() WHERE id = ?', [$user['id']]);
+        Auth::logLogin($user['id'], $email, 'PASSWORD', 'ADMIN', true);
         Response::redirect('/admin/dashboard');
     }
 

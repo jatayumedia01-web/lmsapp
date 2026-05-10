@@ -24,6 +24,12 @@ ob_start();
     <p class="text-muted"><?= View::e($user['email']) ?> · joined <?= View::e(substr((string) $user['joined_at'], 0, 10)) ?> · ID <code><?= View::e($user['id']) ?></code></p>
 </header>
 
+<div class="flex-row" style="margin-bottom:16px">
+    <a href="/admin/users/<?= View::e(urlencode($user['id'])) ?>/activity" class="btn btn-secondary">📊 View activity timeline</a>
+    <a href="/admin/analytics/events?user_id=<?= View::e(urlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Event log</a>
+    <a href="/admin/analytics/logins?user_id=<?= View::e(urlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Login history</a>
+</div>
+
 <?php if ($flash): ?>
     <div class="alert alert-<?= View::e($flash['kind']) ?> auto-hide"><?= View::e($flash['message']) ?></div>
 <?php endif; ?>

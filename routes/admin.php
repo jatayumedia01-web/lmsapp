@@ -14,6 +14,7 @@ use Devithor\Controllers\Admin\UserController as AdminUser;
 use Devithor\Controllers\Admin\SubscriptionController as AdminBilling;
 use Devithor\Controllers\Admin\QAController as AdminQA;
 use Devithor\Controllers\Admin\SettingsController as AdminSettings;
+use Devithor\Controllers\Admin\AnalyticsController as AdminAnalytics;
 
 // ---- Login (public) -----------------------------------------------------
 $router->get('/admin',                 fn () => \Devithor\Response::redirect('/admin/login'));
@@ -82,4 +83,12 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     // ---- Settings ----------------------------------------------------
     $r->get('/settings',                         [AdminSettings::class, 'index']);
     $r->post('/settings',                        [AdminSettings::class, 'update']);
+
+    // ---- Analytics ---------------------------------------------------
+    $r->get('/analytics',                        [AdminAnalytics::class, 'overview']);
+    $r->get('/analytics/geography',              [AdminAnalytics::class, 'geography']);
+    $r->get('/analytics/devices',                [AdminAnalytics::class, 'devices']);
+    $r->get('/analytics/events',                 [AdminAnalytics::class, 'events']);
+    $r->get('/analytics/logins',                 [AdminAnalytics::class, 'logins']);
+    $r->get('/users/{id}/activity',              [AdminAnalytics::class, 'userTimeline']);
 });

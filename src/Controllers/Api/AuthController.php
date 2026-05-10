@@ -51,6 +51,7 @@ final class AuthController
         }
 
         $token = Auth::issueApiToken($user['id']);
+        Auth::logLogin($user['id'], $email, 'API_TOKEN', 'API', true);
         Response::json([
             'token' => $token,
             'user'  => $this->shape($user),

@@ -11,6 +11,7 @@ use Devithor\Auth;
 use Devithor\Controllers\Api\AuthController;
 use Devithor\Controllers\Api\CourseController;
 use Devithor\Controllers\Api\LessonController;
+use Devithor\Controllers\Api\TrackingController;
 
 // ---- Public (no auth) ---------------------------------------------------
 $router->get('/api/v1/health', fn () => \Devithor\Response::json(['status' => 'ok', 'time' => date('c')]));
@@ -25,4 +26,10 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
     $r->get('/courses/{id}',               [CourseController::class, 'show']);
     $r->get('/courses/{id}/lessons',       [LessonController::class, 'forCourse']);
     $r->get('/lessons/{id}',               [LessonController::class, 'show']);
+
+    // Behavior, device, session tracking. Apps batch events for offline support.
+    $r->post('/track/event',               [TrackingController::class, 'singleEvent']);
+    $r->post('/track/batch',               [TrackingController::class, 'batchEvents']);
+    $r->post('/track/session/start',       [TrackingController::class, 'sessionStart']);
+    $r->post('/track/session/end',         [TrackingController::class, 'sessionEnd']);
 });
