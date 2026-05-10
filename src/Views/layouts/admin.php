@@ -22,8 +22,21 @@ use Devithor\View;
         </div>
         <nav>
             <a href="/admin/dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
-            <a href="/admin/courses"   class="<?= $page === 'courses'   ? 'active' : '' ?>">Courses</a>
-            <a href="/admin/courses"   class="<?= $page === 'lessons'   ? 'active' : '' ?>" style="display:none">Lessons</a>
+
+            <div class="nav-group">Catalog</div>
+            <a href="/admin/courses"   class="<?= in_array($page, ['courses', 'lessons'], true) ? 'active' : '' ?>">Courses</a>
+
+            <div class="nav-group">People</div>
+            <a href="/admin/users"     class="<?= $page === 'users' ? 'active' : '' ?>">Users</a>
+
+            <div class="nav-group">Revenue</div>
+            <a href="/admin/billing"   class="<?= $page === 'billing' ? 'active' : '' ?>">Billing</a>
+
+            <div class="nav-group">Community</div>
+            <a href="/admin/qa"        class="<?= $page === 'qa' ? 'active' : '' ?>">Q&amp;A moderation</a>
+
+            <div class="nav-group">System</div>
+            <a href="/admin/settings"  class="<?= $page === 'settings' ? 'active' : '' ?>">Settings</a>
         </nav>
         <div style="padding:16px 20px; margin-top:auto; border-top:1px solid var(--border)">
             <div class="text-muted" style="font-size:12px">Signed in as</div>

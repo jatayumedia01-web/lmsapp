@@ -205,6 +205,79 @@ textarea { min-height: 80px; resize: vertical; }
 }
 .alert-success { background: rgba(16, 185, 129, 0.12); color: var(--success); }
 .alert-danger  { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+.alert-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+.alert-error   { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+.alert.auto-hide { animation: fadeOut 0s ease 6s forwards; }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+/* ---- Stat tile (compact, used everywhere) ---- */
+.stat .stat-label { color: var(--text-muted); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+.stat .stat-value { font-size: 26px; font-weight: 800; color: var(--text); }
+.grid-stats {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin-bottom: 20px;
+}
+a.stat { color: inherit; text-decoration: none; transition: transform 0.1s ease; }
+a.stat:hover { transform: translateY(-2px); border-color: var(--primary); text-decoration: none; }
+
+/* ---- Filter bar (search + selects in one row) ---- */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-start;
+}
+.filter-bar .field { margin-bottom: 0; flex: 1; min-width: 140px; }
+
+/* ---- Tabs ---- */
+.tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow-x: auto;
+}
+.tab {
+    padding: 10px 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+.tab:hover { color: var(--text); text-decoration: none; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ---- Pager ---- */
+.pager { padding: 8px 0; }
+
+/* ---- Sidebar — section headings ---- */
+.sidebar nav .nav-group {
+    padding: 16px 20px 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+/* ---- Warning button ---- */
+.btn-warning { background: var(--warning); color: #000; }
+.btn-warning:hover { background: #D97706; color: #000; text-decoration: none; }
+
+/* ---- Code inline ---- */
+code {
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ---- Checkboxes inside labels ---- */
+.field input[type="checkbox"] { width: auto; margin-right: 6px; vertical-align: middle; }
 
 /* ---- Login ---- */
 .login {
