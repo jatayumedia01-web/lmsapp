@@ -1,0 +1,32 @@
+# Send every request that's not a real file/folder through index.php so the
+# Router can match it. Also adds basic security headers.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Disable directory listing.
+Options -Indexes
+
+# Deny dotfiles entirely.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Security headers — defense in depth.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+</IfModule>
+
+# Cache static assets aggressively (admin CSS/JS rarely change).
+<FilesMatch "\.(css|js|png|jpg|jpeg|svg|webp|woff2)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "public, max-age=2592000, immutable"
+    </IfModule>
+</FilesMatch>

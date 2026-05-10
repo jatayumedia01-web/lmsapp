@@ -1,0 +1,16 @@
+# Root .htaccess — redirects every request through /public so visitors can
+# never reach src/, migrations/, or .env even if they guess the path.
+# This complements (not replaces) Hostinger's per-domain "document root" setting.
+# If you can point the domain directly at /public in hPanel → Domains → Manage
+# → "Document root", do that and DELETE this file. It's only a safety net.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/public
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Deny direct access to sensitive files even via guessed URLs.
+<FilesMatch "^\.env|composer\.(json|lock)|\.gitignore$">
+    Require all denied
+</FilesMatch>
