@@ -1207,6 +1207,174 @@ hr {
     border-radius: 3px;
 }
 
+/* ---- Class cards (Catalog landing) ----------------------------- */
+.class-card {
+    display: block;
+    padding: var(--space-5);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: all .15s ease;
+}
+.class-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--text);
+}
+.class-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.class-color {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.class-name {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+}
+.class-desc {
+    margin: 8px 0 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-height: 36px;
+}
+.class-meta {
+    display: flex;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* ---- Provider tabbed picker ----------------------------------- */
+.provider-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-2);
+    margin: 12px 0;
+}
+.provider-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: inherit;
+    transition: all .12s ease;
+}
+.provider-tab:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+    transform: translateY(-1px);
+}
+.provider-tab.active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.10);
+}
+.provider-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+}
+.provider-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.provider-panel {
+    display: none;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+}
+.provider-panel.active { display: block; }
+
+/* ---- Upload box ---------------------------------------------- */
+.upload-box {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: var(--space-8) var(--space-5);
+    text-align: center;
+    cursor: pointer;
+    transition: all .12s ease;
+}
+.upload-box:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+.upload-label strong { display: block; color: var(--text); font-size: 15px; }
+.upload-progress { margin-top: 16px; }
+.upload-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.upload-progress-bar > div {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), #22D3EE);
+    border-radius: 4px;
+    transition: width .15s ease;
+}
+
+/* ---- FAQ list ------------------------------------------------ */
+.faq-list { display: flex; flex-direction: column; gap: 8px; }
+.faq-item {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.faq-item summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::before {
+    content: '▸';
+    color: var(--text-muted);
+    transition: transform .12s ease;
+    display: inline-block;
+}
+.faq-item[open] summary::before { transform: rotate(90deg); }
+.faq-q { flex: 1; font-size: 14px; }
+.faq-edit-form {
+    padding: 12px 16px 16px;
+    background: var(--bg-elev-1);
+    border-top: 1px solid var(--border);
+}
+.faq-add-form .field { margin-bottom: 10px; }
+
 /* ---- Responsive -------------------------------------------------- */
 @media (max-width: 900px) {
     .layout { flex-direction: column; }

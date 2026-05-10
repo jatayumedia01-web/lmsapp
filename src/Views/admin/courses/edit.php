@@ -3,17 +3,20 @@
 /** @var string $mode  'create' | 'edit' */
 /** @var array $errors */
 /** @var array $me */
+/** @var array $classes */
 /** @var string $page */
 use Devithor\View;
 
 $action = $mode === 'create' ? '/admin/courses' : '/admin/courses/' . $course['id'];
-$heading = $mode === 'create' ? 'New course' : 'Edit course';
+$heading = $mode === 'create' ? 'New subject' : 'Edit subject';
 
 ob_start();
 ?>
 <header>
-    <h2><?= View::e($heading) ?></h2>
-    <p><a href="/admin/courses">← All courses</a></p>
+    <div>
+        <p><a href="/admin/courses">← All subjects</a></p>
+        <h2><?= View::e($heading) ?></h2>
+    </div>
 </header>
 
 <?php if (!empty($errors)): ?>
@@ -30,14 +33,25 @@ ob_start();
 <form method="post" action="<?= View::e($action) ?>" class="card">
     <?php if ($mode === 'create'): ?>
         <div class="field">
-            <label for="id">Course ID (optional — auto-generated if blank)</label>
-            <input id="id" name="id" type="text" value="<?= View::e($course['id'] ?? '') ?>" placeholder="e.g. c_react_basics">
+            <label for="id">Subject ID (optional — auto-generated if blank)</label>
+            <input id="id" name="id" type="text" value="<?= View::e((string) ($course['id'] ?? '')) ?>" placeholder="e.g. c_maths_algebra">
         </div>
     <?php endif; ?>
 
     <div class="field">
+        <label for="class_id">Class</label>
+        <select id="class_id" name="class_id">
+            <option value="">— Uncategorised —</option>
+            <?php foreach ($classes as $cl): ?>
+                <option value="<?= View::e($cl['id']) ?>" <?= ($course['class_id'] ?? '') === $cl['id'] ? 'selected' : '' ?>><?= View::e($cl['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <small class="text-muted">Pick the parent class. <a href="/admin/classes/new">Create a class</a> if needed.</small>
+    </div>
+
+    <div class="field">
         <label for="title">Title *</label>
-        <input id="title" name="title" type="text" value="<?= View::e($course['title']) ?>" required>
+        <input id="title" name="title" type="text" value="<?= View::e((string) $course['title']) ?>" required placeholder="e.g. Mathematics">
     </div>
 
     <div class="field">

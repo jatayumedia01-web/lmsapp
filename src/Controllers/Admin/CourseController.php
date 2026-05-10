@@ -18,9 +18,22 @@ final class CourseController
 {
     public function index(Request $req): never
     {
-        $courses = Database::all('SELECT * FROM courses ORDER BY created_at DESC');
+        $classId = (string) $req->input('class_id', '');
+        $where = ''; $params = [];
+        if ($classId !== '') { $where = 'WHERE class_id = ?'; $params[] = $classId; }
+        $courses = Database::all(
+            "SELECT c.*, cl.name AS class_name, cl.cover_color_hex AS class_color
+             FROM courses c
+             LEFT JOIN classes cl ON cl.id = c.class_id
+             $where
+             ORDER BY c.created_at DESC",
+            $params,
+        );
+        $classes = Database::all('SELECT id, name FROM classes ORDER BY sort_order, name');
         Response::html(View::render('admin/courses/index', [
             'courses' => $courses,
+            'classes' => $classes,
+            'classId' => $classId,
             'me'      => $req->params['user'],
             'page'    => 'courses',
             'flash'   => $this->popFlash(),
@@ -29,12 +42,15 @@ final class CourseController
 
     public function showCreate(Request $req): never
     {
+        $course = $this->blankCourse();
+        $course['class_id'] = (string) ($req->input('class_id') ?? '');
         Response::html(View::render('admin/courses/edit', [
-            'course' => $this->blankCourse(),
-            'mode'   => 'create',
-            'me'     => $req->params['user'],
-            'page'   => 'courses',
-            'errors' => [],
+            'course'  => $course,
+            'mode'    => 'create',
+            'me'      => $req->params['user'],
+            'classes' => Database::all('SELECT id, name FROM classes ORDER BY sort_order, name'),
+            'page'    => 'courses',
+            'errors'  => [],
         ]));
     }
 
@@ -44,23 +60,25 @@ final class CourseController
         $errors = Validator::check($data, $this->rules());
         if ($errors) {
             Response::html(View::render('admin/courses/edit', [
-                'course' => $data,
-                'mode'   => 'create',
-                'me'     => $req->params['user'],
-                'page'   => 'courses',
-                'errors' => $errors,
+                'course'  => $data,
+                'mode'    => 'create',
+                'me'      => $req->params['user'],
+                'classes' => Database::all('SELECT id, name FROM classes ORDER BY sort_order, name'),
+                'page'    => 'courses',
+                'errors'  => $errors,
             ]));
         }
 
         $id = $data['id'] !== '' ? $data['id'] : ('c_' . bin2hex(random_bytes(6)));
         Database::exec(
             'INSERT INTO courses
-             (id, title, subtitle, description, instructor_name, cover_color_hex, cover_image_url,
+             (id, class_id, title, subtitle, description, instructor_name, cover_color_hex, cover_image_url,
               category, difficulty, total_lessons, duration_minutes, rating, rating_count,
               is_premium, is_published)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                $id, $data['title'], $data['subtitle'], $data['description'], $data['instructor_name'],
+                $id, $data['class_id'] ?: null,
+                $data['title'], $data['subtitle'], $data['description'], $data['instructor_name'],
                 $data['cover_color_hex'], $data['cover_image_url'] ?: null,
                 $data['category'], $data['difficulty'],
                 (int) $data['total_lessons'], (int) $data['duration_minutes'],
@@ -68,8 +86,8 @@ final class CourseController
                 (int) $data['is_premium'], (int) $data['is_published'],
             ],
         );
-        $this->setFlash('Course created.', 'success');
-        Response::redirect('/admin/courses');
+        $this->setFlash('Subject created.', 'success');
+        Response::redirect($data['class_id'] ? "/admin/classes/{$data['class_id']}/subjects" : '/admin/courses');
     }
 
     public function showEdit(Request $req): never
@@ -77,11 +95,12 @@ final class CourseController
         $course = Database::one('SELECT * FROM courses WHERE id = ?', [$req->params['id']]);
         if (!$course) Response::notFound();
         Response::html(View::render('admin/courses/edit', [
-            'course' => $course,
-            'mode'   => 'edit',
-            'me'     => $req->params['user'],
-            'page'   => 'courses',
-            'errors' => [],
+            'course'  => $course,
+            'mode'    => 'edit',
+            'me'      => $req->params['user'],
+            'classes' => Database::all('SELECT id, name FROM classes ORDER BY sort_order, name'),
+            'page'    => 'courses',
+            'errors'  => [],
         ]));
     }
 
@@ -95,16 +114,18 @@ final class CourseController
         $errors = Validator::check($data, $this->rules());
         if ($errors) {
             Response::html(View::render('admin/courses/edit', [
-                'course' => $data,
-                'mode'   => 'edit',
-                'me'     => $req->params['user'],
-                'page'   => 'courses',
-                'errors' => $errors,
+                'course'  => $data,
+                'mode'    => 'edit',
+                'me'      => $req->params['user'],
+                'classes' => Database::all('SELECT id, name FROM classes ORDER BY sort_order, name'),
+                'page'    => 'courses',
+                'errors'  => $errors,
             ]));
         }
 
         Database::exec(
             'UPDATE courses SET
+                class_id = ?,
                 title = ?, subtitle = ?, description = ?, instructor_name = ?,
                 cover_color_hex = ?, cover_image_url = ?,
                 category = ?, difficulty = ?,
@@ -113,6 +134,7 @@ final class CourseController
                 is_premium = ?, is_published = ?
              WHERE id = ?',
             [
+                $data['class_id'] ?: null,
                 $data['title'], $data['subtitle'], $data['description'], $data['instructor_name'],
                 $data['cover_color_hex'], $data['cover_image_url'] ?: null,
                 $data['category'], $data['difficulty'],
@@ -122,7 +144,7 @@ final class CourseController
                 $req->params['id'],
             ],
         );
-        $this->setFlash('Course updated.', 'success');
+        $this->setFlash('Subject updated.', 'success');
         Response::redirect('/admin/courses/' . $req->params['id']);
     }
 
@@ -154,6 +176,7 @@ final class CourseController
     {
         return [
             'id' => '',
+            'class_id' => '',
             'title' => '',
             'subtitle' => '',
             'description' => '',
@@ -175,6 +198,7 @@ final class CourseController
     {
         return [
             'id'              => trim((string) $req->input('id', '')),
+            'class_id'        => trim((string) $req->input('class_id', '')),
             'title'           => trim((string) $req->input('title', '')),
             'subtitle'        => trim((string) $req->input('subtitle', '')),
             'description'     => trim((string) $req->input('description', '')),

@@ -100,13 +100,19 @@ final class LessonController
         $lesson = Database::one('SELECT * FROM lessons WHERE id = ?', [$req->params['id']]);
         if (!$lesson) Response::notFound();
         $course = Database::one('SELECT * FROM courses WHERE id = ?', [$lesson['course_id']]);
+        $faqs = Database::all(
+            'SELECT * FROM lesson_faqs WHERE lesson_id = ? ORDER BY order_index ASC, id ASC',
+            [$lesson['id']],
+        );
         Response::html(View::render('admin/lessons/edit', [
             'course' => $course,
             'lesson' => $lesson,
+            'faqs'   => $faqs,
             'mode'   => 'edit',
             'me'     => $req->params['user'],
             'page'   => 'courses',
             'errors' => [],
+            'flash'  => $this->popFlash(),
         ]));
     }
 

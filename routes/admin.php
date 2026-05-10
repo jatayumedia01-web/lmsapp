@@ -15,6 +15,9 @@ use Devithor\Controllers\Admin\SubscriptionController as AdminBilling;
 use Devithor\Controllers\Admin\QAController as AdminQA;
 use Devithor\Controllers\Admin\SettingsController as AdminSettings;
 use Devithor\Controllers\Admin\AnalyticsController as AdminAnalytics;
+use Devithor\Controllers\Admin\ClassController as AdminClass;
+use Devithor\Controllers\Admin\FaqController    as AdminFaq;
+use Devithor\Controllers\Admin\VideoUploadController as AdminUpload;
 
 // ---- Login (public) -----------------------------------------------------
 $router->get('/admin',                 fn () => \Devithor\Response::redirect('/admin/login'));
@@ -25,6 +28,15 @@ $router->post('/admin/logout',         [AdminAuth::class, 'logout']);
 // ---- Authenticated admin area ------------------------------------------
 $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->get('/dashboard',              [DashboardController::class, 'index']);
+
+    // ---- Classes -----------------------------------------------------
+    $r->get('/classes',                          [AdminClass::class, 'index']);
+    $r->get('/classes/new',                      [AdminClass::class, 'showCreate']);
+    $r->post('/classes',                         [AdminClass::class, 'create']);
+    $r->get('/classes/{id}/subjects',            [AdminClass::class, 'subjects']);
+    $r->get('/classes/{id}',                     [AdminClass::class, 'showEdit']);
+    $r->post('/classes/{id}',                    [AdminClass::class, 'update']);
+    $r->post('/classes/{id}/delete',             [AdminClass::class, 'delete']);
 
     // ---- Courses + lessons -------------------------------------------
     $r->get('/courses',                [AdminCourse::class, 'index']);
@@ -37,9 +49,14 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->get('/courses/{courseId}/lessons',       [AdminLesson::class, 'index']);
     $r->get('/courses/{courseId}/lessons/new',   [AdminLesson::class, 'showCreate']);
     $r->post('/courses/{courseId}/lessons',      [AdminLesson::class, 'create']);
-    // /api/video-detect MUST be registered before /lessons/{id} or {id} captures it.
+    // /api/* MUST be registered before /lessons/{id} or {id} captures it.
     $r->get('/api/video-detect',                 [AdminLesson::class, 'videoDetect']);
+    $r->post('/api/upload-video',                [AdminUpload::class, 'upload']);
     $r->get('/lessons/{id}/video',               [AdminLesson::class, 'videoPage']);
+    $r->post('/lessons/{lessonId}/faqs',                  [AdminFaq::class, 'create']);
+    $r->post('/lessons/{lessonId}/faqs/{id}',             [AdminFaq::class, 'update']);
+    $r->post('/lessons/{lessonId}/faqs/{id}/delete',      [AdminFaq::class, 'delete']);
+    $r->post('/lessons/{lessonId}/faqs/{id}/reorder',     [AdminFaq::class, 'reorder']);
     $r->get('/lessons/{id}',                     [AdminLesson::class, 'showEdit']);
     $r->post('/lessons/{id}',                    [AdminLesson::class, 'update']);
     $r->post('/lessons/{id}/delete',             [AdminLesson::class, 'delete']);
