@@ -533,6 +533,68 @@ final class AnalyticsController
         ]));
     }
 
+    /** Video-specific analytics across all lessons. */
+    public function videos(Request $req): never
+    {
+        $stats = [
+            'plays_30d' => (int) Database::scalar(
+                'SELECT COUNT(*) FROM video_views WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)',
+            ),
+            'unique_users_30d' => (int) Database::scalar(
+                'SELECT COUNT(DISTINCT user_id) FROM video_views WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)',
+            ),
+            'completed_30d' => (int) Database::scalar(
+                'SELECT COUNT(*) FROM video_views WHERE completed = 1 AND started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)',
+            ),
+            'watch_hours_30d' => round(((int) (Database::scalar(
+                'SELECT COALESCE(SUM(watch_seconds), 0) FROM video_views WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)',
+            ) ?? 0)) / 3600, 1),
+            'avg_progress_30d' => (int) (Database::scalar(
+                'SELECT COALESCE(AVG(progress_pct), 0) FROM video_views WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)',
+            ) ?? 0),
+        ];
+
+        $top = Database::all(
+            'SELECT l.id, l.title, l.video_provider, l.thumbnail_url, c.title AS course_title,
+                    COUNT(v.id)            AS plays,
+                    COUNT(DISTINCT v.user_id) AS unique_users,
+                    SUM(v.completed)        AS completions,
+                    AVG(v.progress_pct)     AS avg_pct,
+                    SUM(v.watch_seconds)    AS total_seconds
+             FROM lessons l
+             LEFT JOIN courses c ON c.id = l.course_id
+             LEFT JOIN video_views v ON v.lesson_id = l.id AND v.started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+             GROUP BY l.id, l.title, l.video_provider, l.thumbnail_url, c.title
+             HAVING plays > 0
+             ORDER BY plays DESC LIMIT 20',
+        );
+
+        $worst = Database::all(
+            'SELECT l.id, l.title, c.title AS course_title,
+                    AVG(v.progress_pct) AS avg_pct,
+                    COUNT(v.id) AS plays
+             FROM lessons l
+             LEFT JOIN courses c ON c.id = l.course_id
+             INNER JOIN video_views v ON v.lesson_id = l.id AND v.started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+             GROUP BY l.id, l.title, c.title
+             HAVING COUNT(v.id) >= 3
+             ORDER BY AVG(v.progress_pct) ASC LIMIT 10',
+        );
+
+        $providers = Database::all(
+            'SELECT video_provider, COUNT(*) AS c FROM lessons GROUP BY video_provider ORDER BY c DESC',
+        );
+
+        Response::html(View::render('admin/analytics/videos', [
+            'stats'     => $stats,
+            'top'       => $top,
+            'worst'     => $worst,
+            'providers' => $providers,
+            'me'        => $req->params['user'],
+            'page'      => 'analytics',
+        ]));
+    }
+
     /** Per-user behavior timeline — linked from /admin/users/{id}. */
     public function userTimeline(Request $req): never
     {

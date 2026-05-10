@@ -25,6 +25,8 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
     $r->get('/courses',                    [CourseController::class, 'index']);
     $r->get('/courses/{id}',               [CourseController::class, 'show']);
     $r->get('/courses/{id}/lessons',       [LessonController::class, 'forCourse']);
+    $r->get('/lessons/{id}/playback',      [LessonController::class, 'playback']);
+    $r->post('/lessons/{id}/track-playback',[LessonController::class, 'trackPlayback']);
     $r->get('/lessons/{id}',               [LessonController::class, 'show']);
 
     // Behavior, device, session tracking. Apps batch events for offline support.

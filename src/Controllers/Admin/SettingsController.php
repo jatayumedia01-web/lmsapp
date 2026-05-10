@@ -23,6 +23,7 @@ final class SettingsController
     private const GROUPS = [
         'general'       => 'General',
         'features'      => 'Features',
+        'video'         => 'Video',
         'notifications' => 'Notifications',
         'payments'      => 'Payments',
         'maintenance'   => 'Maintenance',

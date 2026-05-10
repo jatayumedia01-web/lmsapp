@@ -37,6 +37,9 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->get('/courses/{courseId}/lessons',       [AdminLesson::class, 'index']);
     $r->get('/courses/{courseId}/lessons/new',   [AdminLesson::class, 'showCreate']);
     $r->post('/courses/{courseId}/lessons',      [AdminLesson::class, 'create']);
+    // /api/video-detect MUST be registered before /lessons/{id} or {id} captures it.
+    $r->get('/api/video-detect',                 [AdminLesson::class, 'videoDetect']);
+    $r->get('/lessons/{id}/video',               [AdminLesson::class, 'videoPage']);
     $r->get('/lessons/{id}',                     [AdminLesson::class, 'showEdit']);
     $r->post('/lessons/{id}',                    [AdminLesson::class, 'update']);
     $r->post('/lessons/{id}/delete',             [AdminLesson::class, 'delete']);
@@ -89,6 +92,7 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->get('/analytics/live.json',              [AdminAnalytics::class, 'liveJson']);
     $r->get('/analytics/engagement',             [AdminAnalytics::class, 'engagement']);
     $r->get('/analytics/cohorts',                [AdminAnalytics::class, 'cohorts']);
+    $r->get('/analytics/videos',                 [AdminAnalytics::class, 'videos']);
     $r->get('/analytics/geography',              [AdminAnalytics::class, 'geography']);
     $r->get('/analytics/devices',                [AdminAnalytics::class, 'devices']);
     $r->get('/analytics/events',                 [AdminAnalytics::class, 'events']);
