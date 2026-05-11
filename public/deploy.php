@@ -66,6 +66,7 @@ $files = [
     'src/Controllers/Admin/CourseController.php',
     'src/Controllers/Admin/LessonController.php',
     'src/Controllers/Admin/DashboardController.php',
+    'src/Controllers/Admin/UserController.php',
     'src/Controllers/Api/AuthController.php',
     'src/Controllers/Api/CourseController.php',
     'src/Controllers/Api/LessonController.php',

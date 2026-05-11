@@ -35,6 +35,7 @@ $router->post('/admin/logout',         [AdminAuth::class, 'logout']);
 // ---- Authenticated admin area ------------------------------------------
 $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->get('/dashboard',              [DashboardController::class, 'index']);
+    $r->get('/dashboard/live.json',    [DashboardController::class, 'liveJson']);
     $r->post('/wipe-demo',             [DashboardController::class, 'wipeDemo']);
 
     // ---- Classes -----------------------------------------------------
