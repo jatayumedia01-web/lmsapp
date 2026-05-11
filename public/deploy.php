@@ -5,47 +5,11 @@ if (($_GET['key'] ?? '') !== 'devithor2026') {
 
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
+    // Use the app's own bootstrap — it loads .env correctly
+    require __DIR__ . '/../src/bootstrap.php';
     header('Content-Type: text/plain');
-
-    // Load .env from every possible location
-    $envCandidates = [
-        dirname(__DIR__) . '/.env',
-        __DIR__ . '/../.env',
-        '/home/u169457691/domains/apptesting.in/.env',
-        '/home/u169457691/.env',
-    ];
-    foreach ($envCandidates as $envPath) {
-        if (!is_file($envPath)) continue;
-        foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
-            [$k, $v] = explode('=', $line, 2);
-            $k = trim($k); $v = trim($v);
-            if (strlen($v) >= 2 && in_array($v[0], ['"', "'"], true)) $v = substr($v, 1, -1);
-            putenv("$k=$v"); $_ENV[$k] = $v;
-        }
-        echo "Loaded .env from: $envPath\n";
-        break;
-    }
-
-    $host = getenv('DB_HOST')     ?: 'localhost';
-    $db   = getenv('DB_DATABASE') ?: '';
-    $user = getenv('DB_USERNAME') ?: '';
-    $pass = getenv('DB_PASSWORD') ?: '';
-
-    echo "DB_HOST=" . ($host ?: '(empty)') . "\n";
-    echo "DB_DATABASE=" . ($db ?: '(empty)') . "\n";
-    echo "DB_USERNAME=" . ($user ?: '(empty)') . "\n\n";
-
-    if ($db === '' || $user === '') {
-        echo "ERROR: DB credentials not found in .env.\n";
-        echo "Checked paths:\n" . implode("\n", $envCandidates) . "\n";
-        exit;
-    }
-
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass,
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $pdo = Devithor\Database::pdo();
         $before = $pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         $pdo->exec('DELETE FROM courses');
