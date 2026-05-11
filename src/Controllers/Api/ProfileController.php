@@ -216,7 +216,7 @@ final class ProfileController
             'city'                 => $u['city'] ?? null,
             'state'                => $u['state'] ?? null,
             'address'              => $u['address'] ?? null,
-            'onboarding_completed' => (int) ($u['onboarding_completed'] ?? 0),
+            'onboarding_completed' => (bool) ($u['onboarding_completed'] ?? false),
         ];
     }
 }

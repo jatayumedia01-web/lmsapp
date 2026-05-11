@@ -228,7 +228,7 @@ final class AuthController
             'class_id'             => $u['class_id'] ?? null,
             'city'                 => $u['city'] ?? null,
             'state'                => $u['state'] ?? null,
-            'onboarding_completed' => (int) ($u['onboarding_completed'] ?? 0),
+            'onboarding_completed' => (bool) ($u['onboarding_completed'] ?? false),
         ];
     }
 
