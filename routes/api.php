@@ -26,12 +26,17 @@ $router->post('/api/v1/auth/request-otp', [AuthController::class, 'requestOtp'])
 $router->post('/api/v1/auth/verify-otp',  [AuthController::class, 'verifyOtp']);
 $router->post('/api/v1/auth/login',       [AuthController::class, 'login']); // backward-compat shim
 
+// ── Public: PIN-based auth ────────────────────────────────────────────────────
+$router->post('/api/v1/auth/check-pin',   [AuthController::class, 'checkPin']);
+$router->post('/api/v1/auth/login-pin',   [AuthController::class, 'loginWithPin']);
+
 // ── Authenticated ─────────────────────────────────────────────────────────────
 $router->group('/api/v1', [Auth::requireUser()], function ($r) {
 
     // ── Auth ─────────────────────────────────────────────────────────────────
-    $r->get('/auth/me',      [AuthController::class, 'me']);
-    $r->post('/auth/logout', [AuthController::class, 'logout']);
+    $r->get('/auth/me',       [AuthController::class, 'me']);
+    $r->post('/auth/logout',  [AuthController::class, 'logout']);
+    $r->post('/auth/set-pin', [AuthController::class, 'setPin']);
 
     // ── Profile & onboarding ─────────────────────────────────────────────────
     $r->post('/profile',                     [ProfileController::class, 'update']);

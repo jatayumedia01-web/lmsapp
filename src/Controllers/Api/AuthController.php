@@ -162,6 +162,56 @@ final class AuthController
             'token'               => $token,
             'user'                => $this->shape($user),
             'onboarding_required' => ((int) ($user['onboarding_completed'] ?? 0)) === 0,
+            'has_pin'             => !empty($user['pin_hash']),
+        ]);
+    }
+
+    // ── Public: check if email has a PIN ─────────────────────────────────────
+
+    public function checkPin(Request $req): never
+    {
+        $email = strtolower(trim((string)($req->body['email'] ?? '')));
+        if ($email === '') Response::json(['error' => 'email required'], 422);
+        $user = Database::one('SELECT id, pin_hash FROM users WHERE email = ?', [$email]);
+        Response::json([
+            'has_account' => $user !== null,
+            'has_pin'     => $user !== null && !empty($user['pin_hash']),
+        ]);
+    }
+
+    // ── Authenticated: set PIN ────────────────────────────────────────────────
+
+    public function setPin(Request $req): never
+    {
+        $user = $req->params['user'];
+        $pin  = (string)($req->body['pin'] ?? '');
+        if (!preg_match('/^\d{4}$/', $pin)) {
+            Response::json(['error' => 'pin_invalid', 'message' => 'PIN must be 4 digits'], 422);
+        }
+        Database::exec(
+            'UPDATE users SET pin_hash = ? WHERE id = ?',
+            [password_hash($pin, PASSWORD_DEFAULT), $user['id']],
+        );
+        Response::json(['success' => true]);
+    }
+
+    // ── Public: login with PIN ────────────────────────────────────────────────
+
+    public function loginWithPin(Request $req): never
+    {
+        $email = strtolower(trim((string)($req->body['email'] ?? '')));
+        $pin   = (string)($req->body['pin'] ?? '');
+        if ($email === '' || $pin === '') Response::json(['error' => 'email and pin required'], 422);
+        $user = Database::one('SELECT * FROM users WHERE email = ?', [$email]);
+        if (!$user || empty($user['pin_hash']) || !password_verify($pin, (string)$user['pin_hash'])) {
+            Response::json(['error' => 'invalid_pin', 'message' => 'Incorrect PIN'], 401);
+        }
+        $token = Auth::issueApiToken($user['id']);
+        Response::json([
+            'token'               => $token,
+            'user'                => $this->shape($user),
+            'onboarding_required' => !(bool)$user['onboarding_completed'],
+            'has_pin'             => true,
         ]);
     }
 
