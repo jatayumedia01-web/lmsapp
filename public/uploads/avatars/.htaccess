@@ -1,0 +1,8 @@
+# Allow image files only — block any script execution in this directory.
+<FilesMatch "(?i)\.(jpg|jpeg|png|webp|gif)$">
+    Allow from all
+</FilesMatch>
+<FilesMatch "(?i)\.(php|phtml|php3|php4|php5|php7|cgi|pl|py)$">
+    Deny from all
+</FilesMatch>
+Options -Indexes -ExecCGI

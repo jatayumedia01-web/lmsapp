@@ -86,6 +86,7 @@ final class UserController
 
     public function show(Request $req): never
     {
+        // SELECT * includes all profile columns added by migration 012.
         $user = Database::one('SELECT * FROM users WHERE id = ?', [$req->params['id']]);
         if (!$user) Response::notFound();
 
@@ -98,13 +99,26 @@ final class UserController
             'enrollments'    => (int) Database::scalar('SELECT COUNT(*) FROM enrollments WHERE user_id = ?', [$user['id']]),
             'questions'      => (int) Database::scalar('SELECT COUNT(*) FROM lesson_questions WHERE author_id = ?', [$user['id']]),
             'answers'        => (int) Database::scalar('SELECT COUNT(*) FROM lesson_answers WHERE author_id = ?', [$user['id']]),
-            'invoices_paid' => (int) Database::scalar(
+            'invoices_paid'  => (int) Database::scalar(
                 'SELECT COUNT(*) FROM invoices WHERE user_id = ? AND status = ?',
                 [$user['id'], 'PAID'],
             ),
             'lifetime_cents' => (int) (Database::scalar(
                 'SELECT COALESCE(SUM(amount_cents), 0) FROM invoices WHERE user_id = ? AND status = ?',
                 [$user['id'], 'PAID'],
+            ) ?? 0),
+            // Extra stats from migration-011 tables
+            'quiz_attempts'  => (int) (Database::scalar(
+                'SELECT COUNT(*) FROM quiz_attempts WHERE user_id = ?',
+                [$user['id']],
+            ) ?? 0),
+            'certificates'   => (int) (Database::scalar(
+                'SELECT COUNT(*) FROM certificates WHERE user_id = ?',
+                [$user['id']],
+            ) ?? 0),
+            'notes'          => (int) (Database::scalar(
+                'SELECT COUNT(*) FROM user_notes WHERE user_id = ?',
+                [$user['id']],
             ) ?? 0),
         ];
 
