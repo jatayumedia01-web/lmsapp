@@ -1,11 +1,30 @@
 <?php
-/**
- * PHP-based deployer — no shell_exec needed.
- * Fetches files directly from GitHub raw content and writes to disk.
- * URL: https://apptesting.in/deploy.php?key=devithor2026
- */
 if (($_GET['key'] ?? '') !== 'devithor2026') {
     http_response_code(403); exit('Forbidden');
+}
+
+// ── WIPE action — deletes all dummy courses from DB ───────────────────────────
+if (($_GET['action'] ?? '') === 'wipe') {
+    header('Content-Type: text/plain');
+    $host = getenv('DB_HOST') ?: 'localhost';
+    $db   = getenv('DB_DATABASE') ?: '';
+    $user = getenv('DB_USERNAME') ?: '';
+    $pass = getenv('DB_PASSWORD') ?: '';
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        $pdo->exec('DELETE FROM courses');
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+        $remaining = $pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
+        echo "=== Wipe Complete ===\n";
+        echo "All dummy courses deleted.\n";
+        echo "Courses remaining: $remaining\n";
+        echo "App catalog is now empty — add real content from dashboard.\n";
+    } catch (Exception $e) {
+        echo "DB Error: " . $e->getMessage() . "\n";
+    }
+    exit;
 }
 
 header('Content-Type: text/html; charset=utf-8');
