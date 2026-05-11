@@ -46,8 +46,12 @@ ob_start();
                         <span class="badge badge-muted">Locked</span>
                     <?php endif; ?>
                 </td>
-                <td class="text-right">
+                <td class="text-right" style="white-space:nowrap">
                     <a href="/admin/lessons/<?= View::e($l['id']) ?>" class="btn btn-secondary btn-sm">Edit</a>
+                    <form method="post" action="/admin/lessons/<?= View::e($l['id']) ?>/delete" style="display:inline"
+                          onsubmit="return confirm('Delete lesson &quot;<?= addslashes(View::e($l['title'])) ?>&quot;?\n\nAll progress, feedback and Q&A for this lesson will be deleted permanently.')">
+                        <button class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;cursor:pointer">Delete</button>
+                    </form>
                 </td>
             </tr>
         <?php endforeach; ?>

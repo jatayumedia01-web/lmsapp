@@ -74,9 +74,13 @@ ob_start();
                             <span class="badge badge-warning">Draft</span>
                         <?php endif; ?>
                     </td>
-                    <td class="text-right">
+                    <td class="text-right" style="white-space:nowrap">
                         <a href="/admin/classes/<?= View::e($r['id']) ?>/subjects" class="btn btn-secondary btn-sm">Subjects</a>
                         <a href="/admin/classes/<?= View::e($r['id']) ?>" class="btn btn-ghost btn-sm">Edit</a>
+                        <form method="post" action="/admin/classes/<?= View::e($r['id']) ?>/delete" style="display:inline"
+                              onsubmit="return confirm('Delete class &quot;<?= addslashes(View::e($r['name'])) ?>&quot;?\n\nThis will permanently delete the class AND all its <?= (int)$r['subjects_count'] ?> subject(s) and <?= (int)$r['lessons_count'] ?> lesson(s).')">
+                            <button class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;cursor:pointer">Delete</button>
+                        </form>
                     </td>
                 </tr>
             <?php endforeach; ?>

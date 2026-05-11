@@ -118,8 +118,11 @@ final class ClassController
 
     public function delete(Request $req): never
     {
-        Database::exec('DELETE FROM classes WHERE id = ?', [$req->params['id']]);
-        $this->setFlash('Class deleted (subjects detached).', 'success');
+        $id = $req->params['id'];
+        // Delete all subjects (courses) inside this class → cascades to lessons + all related data
+        Database::exec('DELETE FROM courses WHERE class_id = ?', [$id]);
+        Database::exec('DELETE FROM classes WHERE id = ?', [$id]);
+        $this->setFlash('Class and all its subjects/lessons deleted.', 'success');
         Response::redirect('/admin/classes');
     }
 

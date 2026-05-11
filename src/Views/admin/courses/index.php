@@ -76,9 +76,13 @@ ob_start();
                         <span class="badge badge-primary">Premium</span>
                     <?php endif; ?>
                 </td>
-                <td class="text-right">
+                <td class="text-right" style="white-space:nowrap">
                     <a href="/admin/courses/<?= View::e($c['id']) ?>/lessons" class="btn btn-secondary btn-sm">Lessons</a>
                     <a href="/admin/courses/<?= View::e($c['id']) ?>" class="btn btn-ghost btn-sm">Edit</a>
+                    <form method="post" action="/admin/courses/<?= View::e($c['id']) ?>/delete" style="display:inline"
+                          onsubmit="return confirm('Delete subject &quot;<?= addslashes(View::e($c['title'])) ?>&quot;?\n\nThis will permanently delete ALL <?= (int)$c['total_lessons'] ?> lesson(s) and all related data.')">
+                        <button class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;cursor:pointer">Delete</button>
+                    </form>
                 </td>
             </tr>
         <?php endforeach; ?>
