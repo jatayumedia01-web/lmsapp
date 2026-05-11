@@ -17,6 +17,7 @@ $root   = '/home/u169457691/domains/apptesting.in';
 // All tracked files — add new ones here when needed
 $files = [
     'public/index.php',
+    'public/wipe.php',
     'src/Router.php',
     'src/Database.php',
     'src/Request.php',
