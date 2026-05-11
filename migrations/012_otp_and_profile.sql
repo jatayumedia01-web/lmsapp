@@ -1,13 +1,10 @@
 -- Migration 012: OTP-based authentication and extended student profile fields.
 --
 -- Adds the `auth_otps` table for passwordless email OTP flow, and extends the
--- `users` table with personal profile, education, and onboarding columns that
--- the Android onboarding screens collect.
+-- `users` table with personal profile, education, and onboarding columns.
 --
--- Each ALTER TABLE is a separate statement so the migrate.php runner (which
--- splits on ";\s*$" per line) processes them one at a time. If a column
--- already exists MySQL will throw a 1060 error; the runner catches Throwable
--- and aborts — so this migration is safe to run only once on a fresh schema.
+-- Uses ALTER TABLE ... ADD COLUMN IF NOT EXISTS (MariaDB 10.0.2+ / MySQL 8.0+)
+-- so this migration is fully idempotent — safe to re-run after a partial failure.
 
 -- ── OTP table ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS auth_otps (
@@ -23,34 +20,31 @@ CREATE TABLE IF NOT EXISTS auth_otps (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── Profile columns on users ─────────────────────────────────────────────────
--- Run each ALTER separately so the migration runner can catch a duplicate-
--- column error on individual statements if needed.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dob DATE NULL;
 
-ALTER TABLE users ADD COLUMN dob DATE NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gender ENUM('MALE','FEMALE','OTHER','PREFER_NOT_TO_SAY') NULL;
 
-ALTER TABLE users ADD COLUMN gender ENUM('MALE','FEMALE','OTHER','PREFER_NOT_TO_SAY') NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile VARCHAR(20) NULL;
 
-ALTER TABLE users ADD COLUMN mobile VARCHAR(20) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20) NULL;
 
-ALTER TABLE users ADD COLUMN whatsapp VARCHAR(20) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS school_name VARCHAR(255) NULL;
 
-ALTER TABLE users ADD COLUMN school_name VARCHAR(255) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS class_id VARCHAR(64) NULL;
 
-ALTER TABLE users ADD COLUMN class_id VARCHAR(64) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100) NULL;
 
-ALTER TABLE users ADD COLUMN city VARCHAR(100) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(100) NULL;
 
-ALTER TABLE users ADD COLUMN state VARCHAR(100) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT NULL;
 
-ALTER TABLE users ADD COLUMN address TEXT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed TINYINT(1) NOT NULL DEFAULT 0;
 
-ALTER TABLE users ADD COLUMN onboarding_completed TINYINT(1) NOT NULL DEFAULT 0;
-
-ALTER TABLE users ADD COLUMN profile_picture_url VARCHAR(500) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture_url VARCHAR(500) NULL;
 
 -- ── Ban columns (added in case older schema is missing them) ─────────────────
-ALTER TABLE users ADD COLUMN is_banned TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned TINYINT(1) NOT NULL DEFAULT 0;
 
-ALTER TABLE users ADD COLUMN banned_at DATETIME NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at DATETIME NULL;
 
-ALTER TABLE users ADD COLUMN banned_reason VARCHAR(500) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_reason VARCHAR(500) NULL;
