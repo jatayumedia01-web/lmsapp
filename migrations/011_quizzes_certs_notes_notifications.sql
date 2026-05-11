@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     is_required         TINYINT(1) NOT NULL DEFAULT 1,
     created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_questions_quiz (quiz_id, order_index),
-    CONSTRAINT fk_questions_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
+    CONSTRAINT fk_qz_questions_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS quiz_attempts (
@@ -56,8 +56,8 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     duration_seconds INT NOT NULL DEFAULT 0,
     INDEX idx_attempts_quiz_user (quiz_id, user_id, started_at),
     INDEX idx_attempts_user (user_id, started_at),
-    CONSTRAINT fk_attempts_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-    CONSTRAINT fk_attempts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_qz_attempts_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_qz_attempts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS quiz_answers (
@@ -70,8 +70,8 @@ CREATE TABLE IF NOT EXISTS quiz_answers (
     points_earned         INT NOT NULL DEFAULT 0,
     answered_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_answers_attempt (attempt_id),
-    CONSTRAINT fk_answers_attempt  FOREIGN KEY (attempt_id)  REFERENCES quiz_attempts(id)  ON DELETE CASCADE,
-    CONSTRAINT fk_answers_question FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE CASCADE
+    CONSTRAINT fk_qz_answers_attempt  FOREIGN KEY (attempt_id)  REFERENCES quiz_attempts(id)  ON DELETE CASCADE,
+    CONSTRAINT fk_qz_answers_question FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============== 2) Certificates ===============
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS certificates (
     revoked_at            DATETIME NULL,
     INDEX idx_certs_user (user_id, issued_at),
     INDEX idx_certs_number (certificate_number),
-    CONSTRAINT fk_certs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_cert011_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Seed one default template — admins can edit or duplicate.
@@ -140,8 +140,8 @@ CREATE TABLE IF NOT EXISTS user_notes (
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_notes_user_lesson (user_id, lesson_id),
     INDEX idx_notes_lesson (lesson_id, timestamp_seconds),
-    CONSTRAINT fk_notes_user   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
-    CONSTRAINT fk_notes_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
+    CONSTRAINT fk_note011_user   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
+    CONSTRAINT fk_note011_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============== 4) Notifications ===============
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     read_at     DATETIME NULL,
     INDEX idx_notif_user_unread (user_id, is_read, created_at),
     INDEX idx_notif_campaign (campaign_id),
-    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_notif011_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS notification_campaigns (
@@ -193,5 +193,5 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     language             VARCHAR(20) NOT NULL DEFAULT 'en',
     daily_goal_minutes   INT NOT NULL DEFAULT 30,
     updated_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_prefs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_pref011_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
