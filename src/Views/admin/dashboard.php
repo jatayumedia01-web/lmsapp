@@ -127,8 +127,9 @@ ob_start();
     // Poll live.json every 30 seconds
     function poll() {
         fetch('/admin/dashboard/live.json')
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(data => {
+                if (!data.ok) return;
                 // Update stats
                 const map = { users: 'stat-users', courses: 'stat-courses', lessons: 'stat-lessons',
                               enrollments: 'stat-enrollments', subscriptions: 'stat-subscriptions', questions: 'stat-questions' };
@@ -169,15 +170,16 @@ ob_start();
                     setTimeout(() => dot.style.opacity = '0', 800);
                 }
             })
-            .catch(() => {}); // silent fail — don't disrupt the admin UI
+            .catch(() => {});
     }
 
     function escHtml(str) {
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // First poll after 5s, then every 30s
-    setTimeout(() => { poll(); setInterval(poll, 30000); }, 5000);
+    // Poll immediately on load, then every 30s
+    poll();
+    setInterval(poll, 30000);
 })();
 </script>
 

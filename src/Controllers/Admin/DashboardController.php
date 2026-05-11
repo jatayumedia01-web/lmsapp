@@ -52,35 +52,44 @@ final class DashboardController
 
     public function liveJson(Request $req): never
     {
-        $stats = [
-            'users'         => (int) Database::scalar('SELECT COUNT(*) FROM users WHERE role = ?', ['STUDENT']),
-            'courses'       => (int) Database::scalar('SELECT COUNT(*) FROM courses'),
-            'lessons'       => (int) Database::scalar('SELECT COUNT(*) FROM lessons'),
-            'enrollments'   => (int) Database::scalar('SELECT COUNT(*) FROM enrollments'),
-            'subscriptions' => (int) Database::scalar(
-                'SELECT COUNT(*) FROM subscriptions WHERE status IN (?, ?)',
-                ['ACTIVE', 'TRIALING'],
-            ),
-            'questions'     => (int) Database::scalar('SELECT COUNT(*) FROM lesson_questions'),
-        ];
+        try {
+            $stats = [
+                'users'         => (int) Database::scalar('SELECT COUNT(*) FROM users WHERE role = ?', ['STUDENT']),
+                'courses'       => (int) Database::scalar('SELECT COUNT(*) FROM courses'),
+                'lessons'       => (int) Database::scalar('SELECT COUNT(*) FROM lessons'),
+                'enrollments'   => (int) Database::scalar('SELECT COUNT(*) FROM enrollments'),
+                'subscriptions' => (int) Database::scalar(
+                    'SELECT COUNT(*) FROM subscriptions WHERE status IN (?, ?)',
+                    ['ACTIVE', 'TRIALING'],
+                ),
+                'questions'     => (int) Database::scalar('SELECT COUNT(*) FROM lesson_questions'),
+            ];
 
-        $recentLearners = Database::all(
-            'SELECT id, full_name, email, joined_at FROM users
-             WHERE role = ? ORDER BY joined_at DESC LIMIT 8',
-            ['STUDENT'],
-        );
+            $recentLearners = Database::all(
+                'SELECT id, full_name, email, joined_at FROM users
+                 WHERE role = ? ORDER BY joined_at DESC LIMIT 8',
+                ['STUDENT'],
+            );
 
-        $onlineCount = (int) Database::scalar(
-            'SELECT COUNT(DISTINCT user_id) FROM user_sessions
-             WHERE ended_at IS NULL AND started_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)',
-        );
+            try {
+                $onlineCount = (int) Database::scalar(
+                    'SELECT COUNT(DISTINCT user_id) FROM user_sessions
+                     WHERE ended_at IS NULL AND started_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)',
+                );
+            } catch (\Throwable $e) {
+                $onlineCount = 0;
+            }
 
-        Response::json([
-            'stats'          => $stats,
-            'recentLearners' => $recentLearners,
-            'onlineNow'      => $onlineCount,
-            'updatedAt'      => date('H:i:s'),
-        ]);
+            Response::json([
+                'ok'             => true,
+                'stats'          => $stats,
+                'recentLearners' => $recentLearners,
+                'onlineNow'      => $onlineCount,
+                'updatedAt'      => date('H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            Response::json(['ok' => false, 'error' => $e->getMessage()]);
+        }
     }
 
     public function wipeDemo(Request $req): never
