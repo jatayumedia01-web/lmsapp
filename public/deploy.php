@@ -3,37 +3,58 @@ if (($_GET['key'] ?? '') !== 'devithor2026') {
     http_response_code(403); exit('Forbidden');
 }
 
-// ── Load .env (same logic as bootstrap.php) ───────────────────────────────────
-$envPath = '/home/u169457691/domains/apptesting.in/.env';
-if (is_file($envPath)) {
-    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
-        [$k, $v] = explode('=', $line, 2);
-        $k = trim($k); $v = trim($v);
-        if (strlen($v) >= 2 && ($v[0] === '"' || $v[0] === "'")) $v = substr($v, 1, -1);
-        putenv("$k=$v"); $_ENV[$k] = $v;
-    }
-}
-
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
     header('Content-Type: text/plain');
-    $host = getenv('DB_HOST') ?: 'localhost';
+
+    // Load .env from every possible location
+    $envCandidates = [
+        dirname(__DIR__) . '/.env',
+        __DIR__ . '/../.env',
+        '/home/u169457691/domains/apptesting.in/.env',
+        '/home/u169457691/.env',
+    ];
+    foreach ($envCandidates as $envPath) {
+        if (!is_file($envPath)) continue;
+        foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+            [$k, $v] = explode('=', $line, 2);
+            $k = trim($k); $v = trim($v);
+            if (strlen($v) >= 2 && in_array($v[0], ['"', "'"], true)) $v = substr($v, 1, -1);
+            putenv("$k=$v"); $_ENV[$k] = $v;
+        }
+        echo "Loaded .env from: $envPath\n";
+        break;
+    }
+
+    $host = getenv('DB_HOST')     ?: 'localhost';
     $db   = getenv('DB_DATABASE') ?: '';
     $user = getenv('DB_USERNAME') ?: '';
     $pass = getenv('DB_PASSWORD') ?: '';
+
+    echo "DB_HOST=" . ($host ?: '(empty)') . "\n";
+    echo "DB_DATABASE=" . ($db ?: '(empty)') . "\n";
+    echo "DB_USERNAME=" . ($user ?: '(empty)') . "\n\n";
+
+    if ($db === '' || $user === '') {
+        echo "ERROR: DB credentials not found in .env.\n";
+        echo "Checked paths:\n" . implode("\n", $envCandidates) . "\n";
+        exit;
+    }
+
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass,
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $before = $pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         $pdo->exec('DELETE FROM courses');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
-        $remaining = $pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
+        $after = $pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
         echo "=== Wipe Complete ===\n";
-        echo "All dummy courses deleted.\n";
-        echo "Courses remaining: $remaining\n";
-        echo "App catalog is now empty — add real content from dashboard.\n";
+        echo "Deleted: $before courses\n";
+        echo "Remaining: $after\n";
+        echo "App catalog is now empty.\n";
     } catch (Exception $e) {
         echo "DB Error: " . $e->getMessage() . "\n";
     }
