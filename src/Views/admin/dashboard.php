@@ -14,6 +14,14 @@ ob_start();
         <p>Snapshot of your LMS · <?= date('F j, Y · H:i') ?></p>
     </div>
     <div class="spacer"></div>
+    <?php if ((int)$stats['courses'] > 0): ?>
+    <form method="post" action="/admin/wipe-demo" style="display:inline"
+          onsubmit="return confirm('Delete ALL <?= (int)$stats['courses'] ?> courses and their lessons permanently?')">
+        <button class="btn" style="background:#ef4444;color:#fff;border:none;cursor:pointer;margin-right:8px">
+            🗑 Delete All Demo Courses
+        </button>
+    </form>
+    <?php endif; ?>
     <a href="/admin/courses/new" class="btn btn-primary">+ New course</a>
 </header>
 

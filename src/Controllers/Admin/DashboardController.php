@@ -49,4 +49,12 @@ final class DashboardController
             'page'           => 'dashboard',
         ]));
     }
+
+    public function wipeDemo(Request $req): never
+    {
+        Database::exec('SET FOREIGN_KEY_CHECKS = 0');
+        Database::exec('DELETE FROM courses');
+        Database::exec('SET FOREIGN_KEY_CHECKS = 1');
+        Response::redirect('/admin/dashboard');
+    }
 }
