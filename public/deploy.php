@@ -3,6 +3,24 @@ if (($_GET['key'] ?? '') !== 'devithor2026') {
     http_response_code(403); exit('Forbidden');
 }
 
+// ── MIGRATE action — runs pending SQL migrations ──────────────────────────────
+if (($_GET['action'] ?? '') === 'migrate') {
+    require __DIR__ . '/../src/bootstrap.php';
+    header('Content-Type: text/plain');
+    try {
+        $pdo = Devithor\Database::pdo();
+        $sql = file_get_contents(__DIR__ . '/../migrations/013_pin_auth.sql');
+        $pdo->exec($sql);
+        echo "Migration 013_pin_auth.sql: OK\n";
+        // Verify column exists
+        $cols = $pdo->query("SHOW COLUMNS FROM users LIKE 'pin_hash'")->fetchAll();
+        echo "pin_hash column: " . (count($cols) > 0 ? "EXISTS ✓" : "MISSING ✗") . "\n";
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage() . "\n";
+    }
+    exit;
+}
+
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
     // Use the app's own bootstrap — it loads .env correctly
