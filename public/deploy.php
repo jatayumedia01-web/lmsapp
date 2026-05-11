@@ -3,6 +3,19 @@ if (($_GET['key'] ?? '') !== 'devithor2026') {
     http_response_code(403); exit('Forbidden');
 }
 
+// ── Load .env (same logic as bootstrap.php) ───────────────────────────────────
+$envPath = '/home/u169457691/domains/apptesting.in/.env';
+if (is_file($envPath)) {
+    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+        [$k, $v] = explode('=', $line, 2);
+        $k = trim($k); $v = trim($v);
+        if (strlen($v) >= 2 && ($v[0] === '"' || $v[0] === "'")) $v = substr($v, 1, -1);
+        putenv("$k=$v"); $_ENV[$k] = $v;
+    }
+}
+
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
     header('Content-Type: text/plain');
