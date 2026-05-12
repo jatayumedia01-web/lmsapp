@@ -1,4 +1,5 @@
 <?php
+// v2026-05-12-exams
 /**
  * Admin web UI routes — server-rendered HTML behind a session login.
  *
