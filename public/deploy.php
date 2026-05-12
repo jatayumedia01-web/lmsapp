@@ -209,6 +209,46 @@ foreach ($files as $file) {
 // Full OPcache flush after all files are written.
 if (function_exists('opcache_reset')) opcache_reset();
 
+// Always write exam routes directly (bypass GitHub CDN cache issues).
+$examRoutes = '<?php
+use Devithor\Auth;
+use Devithor\Controllers\Admin\ExamController as AdminExam;
+use Devithor\Controllers\Api\ExamApiController as ApiExam;
+$m=[Auth::requireAdmin()];
+$router->get("/admin/exams",[AdminExam::class,"index"],$m);
+$router->get("/admin/exams/new",[AdminExam::class,"showCreate"],$m);
+$router->post("/admin/exams",[AdminExam::class,"create"],$m);
+$router->get("/admin/exams/{id}/questions",[AdminExam::class,"questions"],$m);
+$router->post("/admin/exams/{id}/questions",[AdminExam::class,"questionCreate"],$m);
+$router->post("/admin/exams/questions/{id}/delete",[AdminExam::class,"questionDelete"],$m);
+$router->get("/admin/exams/{id}/results",[AdminExam::class,"results"],$m);
+$router->post("/admin/exams/{id}/publish",[AdminExam::class,"publish"],$m);
+$router->get("/admin/exams/{id}",[AdminExam::class,"showEdit"],$m);
+$router->post("/admin/exams/{id}",[AdminExam::class,"update"],$m);
+$router->post("/admin/exams/{id}/delete",[AdminExam::class,"delete"],$m);
+$a=[Auth::requireUser()];
+$router->get("/api/v1/exams",[ApiExam::class,"list"],$a);
+$router->get("/api/v1/exams/{id}",[ApiExam::class,"show"],$a);
+$router->post("/api/v1/exams/{id}/start",[ApiExam::class,"start"],$a);
+$router->post("/api/v1/exams/attempts/{id}/answer",[ApiExam::class,"saveAnswer"],$a);
+$router->post("/api/v1/exams/attempts/{id}/submit",[ApiExam::class,"submit"],$a);
+$router->get("/api/v1/exams/attempts/{id}/result",[ApiExam::class,"result"],$a);
+';
+file_put_contents("$root/routes/exams.php", $examRoutes);
+if (function_exists('opcache_invalidate')) opcache_invalidate("$root/routes/exams.php", true);
+
+// Ensure index.php requires routes/exams.php.
+$idx = file_get_contents("$root/public/index.php");
+if ($idx && !str_contains($idx, 'routes/exams.php')) {
+    $idx = str_replace(
+        "require __DIR__ . '/../routes/admin.php';",
+        "require __DIR__ . '/../routes/admin.php';\n    require __DIR__ . '/../routes/exams.php';",
+        $idx
+    );
+    file_put_contents("$root/public/index.php", $idx);
+    if (function_exists('opcache_invalidate')) opcache_invalidate("$root/public/index.php", true);
+}
+
 ?><!DOCTYPE html>
 <html>
 <head>
