@@ -139,7 +139,8 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->post('/certificates/{id}/revoke',          [AdminCert::class, 'revoke']);
 
     // ---- Mock Exams --------------------------------------------------
-    $r->get('/exams',                            [AdminExam::class, 'index']);
+    $r->get('/exams', function ($req) { \Devithor\Response::html('<h1>Exams route works!</h1>'); });
+    $r->get('/exams_real',                       [AdminExam::class, 'index']);
     $r->get('/exams/new',                        [AdminExam::class, 'showCreate']);
     $r->post('/exams',                           [AdminExam::class, 'create']);
     $r->get('/exams/{id}/questions',             [AdminExam::class, 'questions']);
