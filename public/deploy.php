@@ -261,6 +261,48 @@ $idxReal = realpath($idxDest) ?: $idxDest;
 if (function_exists('opcache_invalidate')) { opcache_invalidate($idxReal, true); opcache_invalidate($idxDest, true); }
 if (function_exists('opcache_reset')) opcache_reset();
 
+// Write exam-admin.php directly (new standalone file bypasses OPcache).
+$examAdmin = '<?php
+require __DIR__ . "/../src/bootstrap.php";
+use Devithor\Router; use Devithor\Request; use Devithor\Response; use Devithor\Auth;
+use Devithor\Controllers\Admin\ExamController as AdminExam;
+try {
+    $router = new Router(); $m = [Auth::requireAdmin()];
+    $router->get("/admin/exams",[AdminExam::class,"index"],$m);
+    $router->get("/admin/exams/new",[AdminExam::class,"showCreate"],$m);
+    $router->post("/admin/exams",[AdminExam::class,"create"],$m);
+    $router->get("/admin/exams/{id}/questions",[AdminExam::class,"questions"],$m);
+    $router->post("/admin/exams/{id}/questions",[AdminExam::class,"questionCreate"],$m);
+    $router->post("/admin/exams/questions/{id}/delete",[AdminExam::class,"questionDelete"],$m);
+    $router->get("/admin/exams/{id}/results",[AdminExam::class,"results"],$m);
+    $router->post("/admin/exams/{id}/publish",[AdminExam::class,"publish"],$m);
+    $router->get("/admin/exams/{id}",[AdminExam::class,"showEdit"],$m);
+    $router->post("/admin/exams/{id}",[AdminExam::class,"update"],$m);
+    $router->post("/admin/exams/{id}/delete",[AdminExam::class,"delete"],$m);
+    $router->dispatch(Request::fromGlobals());
+} catch (Throwable $e) { Response::html("<h1>Error</h1><p>".htmlspecialchars($e->getMessage())."</p>",500); }
+';
+$eaDest = "$root/public/exam-admin.php";
+$eaWritten = file_put_contents($eaDest, $examAdmin);
+$results[] = $eaWritten !== false
+    ? ['status'=>'ok','file'=>'public/exam-admin.php (direct)','msg'=>"$eaWritten bytes"]
+    : ['status'=>'fail','file'=>'public/exam-admin.php (direct)','msg'=>'WRITE FAILED'];
+
+// Update .htaccess to route /admin/exams to exam-admin.php (Apache-level, no OPcache).
+$htDest = "$root/public/.htaccess";
+$ht = file_get_contents($htDest);
+if ($ht && !str_contains($ht, 'exam-admin.php')) {
+    $ht = str_replace(
+        "RewriteEngine On\n",
+        "RewriteEngine On\n    RewriteRule ^admin/exams(/.*)?$ /exam-admin.php [L,QSA]\n",
+        $ht
+    );
+    file_put_contents($htDest, $ht);
+    $results[] = ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>'exam route added'];
+} else {
+    $results[] = ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>str_contains((string)$ht,'exam-admin.php') ? 'already has exam route' : 'WRITE FAILED'];
+}
+
 ?><!DOCTYPE html>
 <html>
 <head>
