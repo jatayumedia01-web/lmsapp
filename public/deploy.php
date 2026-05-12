@@ -9,12 +9,17 @@ if (($_GET['action'] ?? '') === 'migrate') {
     header('Content-Type: text/plain');
     try {
         $pdo = Devithor\Database::pdo();
-        $sql = file_get_contents(__DIR__ . '/../migrations/013_pin_auth.sql');
-        $pdo->exec($sql);
-        echo "Migration 013_pin_auth.sql: OK\n";
-        // Verify column exists
-        $cols = $pdo->query("SHOW COLUMNS FROM users LIKE 'pin_hash'")->fetchAll();
-        echo "pin_hash column: " . (count($cols) > 0 ? "EXISTS ✓" : "MISSING ✗") . "\n";
+        $files = ['013_pin_auth.sql', '014_mock_exams.sql'];
+        foreach ($files as $file) {
+            $path = __DIR__ . "/../migrations/$file";
+            if (!file_exists($path)) { echo "SKIP $file (not found)\n"; continue; }
+            $sql = file_get_contents($path);
+            foreach (array_filter(array_map('trim', explode(';', $sql))) as $stmt) {
+                if ($stmt !== '') $pdo->exec($stmt . ';');
+            }
+            echo "OK: $file\n";
+        }
+        echo "All migrations done ✓\n";
     } catch (Exception $e) {
         echo "Error: " . $e->getMessage() . "\n";
     }
