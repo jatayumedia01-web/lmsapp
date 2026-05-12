@@ -289,20 +289,34 @@ $results[] = $eaWritten !== false
     ? ['status'=>'ok','file'=>'public/exam-admin.php (direct)','msg'=>"$eaWritten bytes"]
     : ['status'=>'fail','file'=>'public/exam-admin.php (direct)','msg'=>'WRITE FAILED'];
 
-// Update .htaccess to route /admin/exams to exam-admin.php (Apache-level, no OPcache).
+// Write .htaccess directly with exam route (avoid str_replace indentation bugs).
 $htDest = "$root/public/.htaccess";
-$ht = file_get_contents($htDest);
-if ($ht && !str_contains($ht, 'exam-admin.php')) {
-    $ht = str_replace(
-        "RewriteEngine On\n",
-        "RewriteEngine On\n    RewriteRule ^admin/exams(/.*)?$ /exam-admin.php [L,QSA]\n",
-        $ht
-    );
-    file_put_contents($htDest, $ht);
-    $results[] = ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>'exam route added'];
-} else {
-    $results[] = ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>str_contains((string)$ht,'exam-admin.php') ? 'already has exam route' : 'WRITE FAILED'];
-}
+$newHt = '<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^admin/exams(/.*)?$ /exam-admin.php [L,QSA]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+Options -Indexes
+<FilesMatch "^\\.">
+    Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+<FilesMatch "\\.(css|js|png|jpg|jpeg|svg|webp|woff2)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "public, max-age=2592000, immutable"
+    </IfModule>
+</FilesMatch>
+';
+$htWritten = file_put_contents($htDest, $newHt);
+$results[] = $htWritten !== false
+    ? ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>"$htWritten bytes — exam route added"]
+    : ['status'=>'fail','file'=>'public/.htaccess (direct)','msg'=>'WRITE FAILED'];
 
 ?><!DOCTYPE html>
 <html>
