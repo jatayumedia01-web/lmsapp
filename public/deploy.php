@@ -69,6 +69,7 @@ $files = [
     'src/Auth.php',
     'routes/admin.php',
     'routes/api.php',
+    'routes/exams.php',
     'src/Controllers/Admin/ClassController.php',
     'src/Controllers/Admin/CourseController.php',
     'src/Controllers/Admin/LessonController.php',
