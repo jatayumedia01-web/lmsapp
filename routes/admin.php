@@ -20,6 +20,7 @@ use Devithor\Controllers\Admin\FaqController    as AdminFaq;
 use Devithor\Controllers\Admin\VideoUploadController as AdminUpload;
 use Devithor\Controllers\Admin\QuizController        as AdminQuiz;
 use Devithor\Controllers\Admin\CertificateController as AdminCert;
+use Devithor\Controllers\Admin\ExamController as AdminExam;
 use Devithor\Controllers\Admin\NotificationController as AdminNotif;
 use Devithor\Controllers\PublicController            as PublicCtl;
 
@@ -135,6 +136,19 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
     $r->post('/certificates/templates/{id}',       [AdminCert::class, 'templateUpdate']);
     $r->post('/certificates/templates/{id}/delete',[AdminCert::class, 'templateDelete']);
     $r->post('/certificates/{id}/revoke',          [AdminCert::class, 'revoke']);
+
+    // ---- Mock Exams --------------------------------------------------
+    $r->get('/exams',                            [AdminExam::class, 'index']);
+    $r->get('/exams/new',                        [AdminExam::class, 'showCreate']);
+    $r->post('/exams',                           [AdminExam::class, 'create']);
+    $r->get('/exams/{id}/questions',             [AdminExam::class, 'questions']);
+    $r->post('/exams/{id}/questions',            [AdminExam::class, 'questionCreate']);
+    $r->post('/exams/questions/{id}/delete',     [AdminExam::class, 'questionDelete']);
+    $r->get('/exams/{id}/results',               [AdminExam::class, 'results']);
+    $r->post('/exams/{id}/publish',              [AdminExam::class, 'publish']);
+    $r->get('/exams/{id}',                       [AdminExam::class, 'showEdit']);
+    $r->post('/exams/{id}',                      [AdminExam::class, 'update']);
+    $r->post('/exams/{id}/delete',               [AdminExam::class, 'delete']);
 
     // ---- Notifications -----------------------------------------------
     $r->get('/notifications',                      [AdminNotif::class, 'index']);

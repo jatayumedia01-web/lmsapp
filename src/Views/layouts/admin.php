@@ -13,6 +13,7 @@ $navItems = [
         ['key' => 'classes',     'label' => 'Classes',      'icon' => '◧', 'href' => '/admin/classes'],
         ['key' => 'courses',     'label' => 'Subjects',     'icon' => '▤', 'href' => '/admin/courses', 'aliases' => ['lessons']],
         ['key' => 'quizzes',     'label' => 'Quizzes',      'icon' => '✓', 'href' => '/admin/quizzes'],
+        ['key' => 'exams',       'label' => 'Mock Exams',   'icon' => '📝', 'href' => '/admin/exams'],
         ['key' => 'certificates','label' => 'Certificates', 'icon' => '⊛', 'href' => '/admin/certificates'],
     ],
     ['People',

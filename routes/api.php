@@ -16,6 +16,7 @@ use Devithor\Controllers\Api\ProfileController;
 use Devithor\Controllers\Api\TrackingController;
 use Devithor\Controllers\Api\QuizController as ApiQuiz;
 use Devithor\Controllers\Api\NoteController as ApiNote;
+use Devithor\Controllers\Api\ExamApiController as ApiExam;
 use Devithor\Controllers\Api\NotificationApiController as ApiNotif;
 
 // ── Health ────────────────────────────────────────────────────────────────────
@@ -82,4 +83,12 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
 
     // ── Certificates ──────────────────────────────────────────────────────────
     $r->get('/my-certificates',              [ApiCert::class, 'myList']);
+
+    // ── Mock Exams ────────────────────────────────────────────────────────────
+    $r->get('/exams',                                [ApiExam::class, 'list']);
+    $r->get('/exams/{id}',                           [ApiExam::class, 'show']);
+    $r->post('/exams/{id}/start',                    [ApiExam::class, 'start']);
+    $r->post('/exams/attempts/{id}/answer',          [ApiExam::class, 'saveAnswer']);
+    $r->post('/exams/attempts/{id}/submit',          [ApiExam::class, 'submit']);
+    $r->get('/exams/attempts/{id}/result',           [ApiExam::class, 'result']);
 });
