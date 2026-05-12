@@ -120,6 +120,8 @@ $files = [
     'public/index.php',
     'public/wipe.php',
     'public/deploy.php',
+    'public/.htaccess',
+    'public/exam-admin.php',
     'src/Router.php',
     'src/Database.php',
     'src/Request.php',
