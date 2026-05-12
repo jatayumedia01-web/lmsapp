@@ -27,6 +27,7 @@ ob_start();
     <?php endif; ?>
     <a href="/admin/courses/new" class="btn btn-primary">+ New course</a>
 </header>
+<div id="sync-bar" style="display:none;font-size:12px;margin-bottom:12px;padding:6px 12px;border-radius:6px;background:#1a1a2e"></div>
 
 <div class="grid-stats">
     <a class="stat" href="/admin/users">
@@ -124,13 +125,20 @@ ob_start();
         }, dur / steps);
     }
 
-    // Poll live.json every 30 seconds
+    function setSyncStatus(ok, msg) {
+        const bar = document.getElementById('sync-bar');
+        if (!bar) return;
+        bar.style.display = 'block';
+        bar.style.color = ok ? '#86efac' : '#f87171';
+        bar.textContent = ok ? ('✓ Live — synced at ' + msg) : ('⚠ Sync failed: ' + msg);
+    }
+
     function poll() {
-        fetch('/admin/dashboard/live.json')
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch('/admin/dashboard/live.json', { credentials: 'same-origin' })
+            .then(r => r.json())
             .then(data => {
-                if (!data.ok) return;
-                // Update stats
+                if (!data.ok) { setSyncStatus(false, data.error || 'server error'); return; }
+
                 const map = { users: 'stat-users', courses: 'stat-courses', lessons: 'stat-lessons',
                               enrollments: 'stat-enrollments', subscriptions: 'stat-subscriptions', questions: 'stat-questions' };
                 Object.entries(map).forEach(([key, id]) => {
@@ -138,39 +146,28 @@ ob_start();
                     if (el) animateStat(el, data.stats[key]);
                 });
 
-                // Online badge
                 const badge = document.getElementById('online-badge');
                 if (badge) {
-                    if (data.onlineNow > 0) {
-                        badge.textContent = data.onlineNow + ' online now';
-                        badge.style.display = 'inline';
-                    } else {
-                        badge.style.display = 'none';
-                    }
+                    badge.textContent = data.onlineNow + ' online now';
+                    badge.style.display = data.onlineNow > 0 ? 'inline' : 'none';
                 }
 
-                // Recent learners table
                 const tbody = document.getElementById('learners-tbody');
                 if (tbody && data.recentLearners && data.recentLearners.length > 0) {
                     tbody.innerHTML = data.recentLearners.map(l => {
-                        const joined = new Date(l.joined_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
-                        const encoded = encodeURIComponent(l.id);
+                        const d = new Date(l.joined_at.replace(' ', 'T'));
+                        const joined = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
                         return `<tr>
-                            <td><a href="/admin/users/${encoded}">${escHtml(l.full_name)}</a></td>
+                            <td><a href="/admin/users/${encodeURIComponent(l.id)}">${escHtml(l.full_name)}</a></td>
                             <td class="text-muted">${escHtml(l.email)}</td>
                             <td class="text-muted">${joined}</td>
                         </tr>`;
                     }).join('');
                 }
 
-                // Sync flash dot
-                const dot = document.getElementById('sync-dot');
-                if (dot) {
-                    dot.style.opacity = '1';
-                    setTimeout(() => dot.style.opacity = '0', 800);
-                }
+                setSyncStatus(true, data.updatedAt);
             })
-            .catch(() => {});
+            .catch(e => setSyncStatus(false, e.message || 'network error'));
     }
 
     function escHtml(str) {

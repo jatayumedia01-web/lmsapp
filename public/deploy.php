@@ -121,6 +121,8 @@ foreach ($files as $file) {
     if (!is_dir($dir)) @mkdir($dir, 0755, true);
 
     if (file_put_contents($dest, $content) !== false) {
+        // Clear OPcache for this file so PHP serves fresh bytecode immediately.
+        if (function_exists('opcache_invalidate')) opcache_invalidate($dest, true);
         $results[] = ['status' => 'ok', 'file' => $file, 'msg' => number_format(strlen($content)) . ' bytes'];
         $ok++;
     } else {
@@ -128,6 +130,9 @@ foreach ($files as $file) {
         $fail++;
     }
 }
+
+// Full OPcache flush after all files are written.
+if (function_exists('opcache_reset')) opcache_reset();
 
 ?><!DOCTYPE html>
 <html>
