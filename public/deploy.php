@@ -58,6 +58,7 @@ $root   = '/home/u169457691/domains/apptesting.in';
 $files = [
     'public/index.php',
     'public/wipe.php',
+    'public/deploy.php',
     'src/Router.php',
     'src/Database.php',
     'src/Request.php',
