@@ -209,7 +209,7 @@ foreach ($files as $file) {
 // Full OPcache flush after all files are written.
 if (function_exists('opcache_reset')) opcache_reset();
 
-// Always write exam routes directly (bypass GitHub CDN cache issues).
+// Always write exam routes directly + invalidate using realpath.
 $examRoutes = '<?php
 use Devithor\Auth;
 use Devithor\Controllers\Admin\ExamController as AdminExam;
@@ -234,20 +234,30 @@ $router->post("/api/v1/exams/attempts/{id}/answer",[ApiExam::class,"saveAnswer"]
 $router->post("/api/v1/exams/attempts/{id}/submit",[ApiExam::class,"submit"],$a);
 $router->get("/api/v1/exams/attempts/{id}/result",[ApiExam::class,"result"],$a);
 ';
-file_put_contents("$root/routes/exams.php", $examRoutes);
-if (function_exists('opcache_invalidate')) opcache_invalidate("$root/routes/exams.php", true);
+$examDest = "$root/routes/exams.php";
+$examWritten = file_put_contents($examDest, $examRoutes);
+$examReal = realpath($examDest) ?: $examDest;
+if (function_exists('opcache_invalidate')) { opcache_invalidate($examReal, true); opcache_invalidate($examDest, true); }
+if ($examWritten !== false) {
+    $results[] = ['status' => 'ok',   'file' => 'routes/exams.php (direct)', 'msg' => "$examWritten bytes written to $examReal"];
+} else {
+    $results[] = ['status' => 'fail', 'file' => 'routes/exams.php (direct)', 'msg' => "WRITE FAILED — check permissions on $examDest"];
+}
 
-// Ensure index.php requires routes/exams.php.
-$idx = file_get_contents("$root/public/index.php");
+// Force index.php to require routes/exams.php using realpath-based invalidation.
+$idxDest = "$root/public/index.php";
+$idx = file_get_contents($idxDest);
 if ($idx && !str_contains($idx, 'routes/exams.php')) {
     $idx = str_replace(
         "require __DIR__ . '/../routes/admin.php';",
         "require __DIR__ . '/../routes/admin.php';\n    require __DIR__ . '/../routes/exams.php';",
         $idx
     );
-    file_put_contents("$root/public/index.php", $idx);
-    if (function_exists('opcache_invalidate')) opcache_invalidate("$root/public/index.php", true);
+    file_put_contents($idxDest, $idx);
 }
+$idxReal = realpath($idxDest) ?: $idxDest;
+if (function_exists('opcache_invalidate')) { opcache_invalidate($idxReal, true); opcache_invalidate($idxDest, true); }
+if (function_exists('opcache_reset')) opcache_reset();
 
 ?><!DOCTYPE html>
 <html>
