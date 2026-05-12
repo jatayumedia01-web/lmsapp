@@ -27,6 +27,66 @@ if (($_GET['action'] ?? '') === 'migrate') {
     exit;
 }
 
+// ── SETUP-EXAMS: directly writes exam routes into routes/admin.php ───────────
+if (($_GET['action'] ?? '') === 'setup-exams') {
+    header('Content-Type: text/plain');
+    $root = '/home/u169457691/domains/apptesting.in';
+
+    // 1. Create .user.ini to force OPcache timestamp checking
+    $userIni = "opcache.revalidate_freq=0\n";
+    file_put_contents("$root/public/.user.ini", $userIni);
+    echo "OK: .user.ini written (opcache.revalidate_freq=0)\n";
+
+    // 2. Write exam routes directly to routes/exams.php (bypass GitHub CDN)
+    $examRoutes = <<<'PHP'
+<?php
+use Devithor\Auth;
+use Devithor\Controllers\Admin\ExamController as AdminExam;
+use Devithor\Controllers\Api\ExamApiController as ApiExam;
+
+$m = [Auth::requireAdmin()];
+$router->get('/admin/exams',                        [AdminExam::class,'index'],          $m);
+$router->get('/admin/exams/new',                    [AdminExam::class,'showCreate'],     $m);
+$router->post('/admin/exams',                       [AdminExam::class,'create'],         $m);
+$router->get('/admin/exams/{id}/questions',         [AdminExam::class,'questions'],      $m);
+$router->post('/admin/exams/{id}/questions',        [AdminExam::class,'questionCreate'], $m);
+$router->post('/admin/exams/questions/{id}/delete', [AdminExam::class,'questionDelete'], $m);
+$router->get('/admin/exams/{id}/results',           [AdminExam::class,'results'],        $m);
+$router->post('/admin/exams/{id}/publish',          [AdminExam::class,'publish'],        $m);
+$router->get('/admin/exams/{id}',                   [AdminExam::class,'showEdit'],       $m);
+$router->post('/admin/exams/{id}',                  [AdminExam::class,'update'],         $m);
+$router->post('/admin/exams/{id}/delete',           [AdminExam::class,'delete'],         $m);
+$a = [Auth::requireUser()];
+$router->get('/api/v1/exams',                       [ApiExam::class,'list'],       $a);
+$router->get('/api/v1/exams/{id}',                  [ApiExam::class,'show'],       $a);
+$router->post('/api/v1/exams/{id}/start',           [ApiExam::class,'start'],      $a);
+$router->post('/api/v1/exams/attempts/{id}/answer', [ApiExam::class,'saveAnswer'], $a);
+$router->post('/api/v1/exams/attempts/{id}/submit', [ApiExam::class,'submit'],     $a);
+$router->get('/api/v1/exams/attempts/{id}/result',  [ApiExam::class,'result'],     $a);
+PHP;
+    file_put_contents("$root/routes/exams.php", $examRoutes);
+    touch("$root/routes/exams.php");
+    if (function_exists('opcache_invalidate')) opcache_invalidate("$root/routes/exams.php", true);
+    echo "OK: routes/exams.php written\n";
+
+    // 3. Write index.php with routes/exams.php require
+    $indexContent = file_get_contents("$root/public/index.php");
+    if (!str_contains($indexContent, 'routes/exams.php')) {
+        $indexContent = str_replace(
+            "require __DIR__ . '/../routes/admin.php';",
+            "require __DIR__ . '/../routes/admin.php';\n    require __DIR__ . '/../routes/exams.php';",
+            $indexContent
+        );
+        file_put_contents("$root/public/index.php", $indexContent);
+        touch("$root/public/index.php");
+    }
+    if (function_exists('opcache_invalidate')) opcache_invalidate("$root/public/index.php", true);
+    if (function_exists('opcache_reset')) opcache_reset();
+    echo "OK: index.php updated\n";
+    echo "\nDone! Wait 30 seconds then visit /admin/exams\n";
+    exit;
+}
+
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
     // Use the app's own bootstrap — it loads .env correctly
