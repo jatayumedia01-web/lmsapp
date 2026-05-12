@@ -30,7 +30,7 @@ if (($_GET['action'] ?? '') === 'migrate') {
 // ── SETUP-EXAMS: directly writes exam routes into routes/admin.php ───────────
 if (($_GET['action'] ?? '') === 'setup-exams') {
     header('Content-Type: text/plain');
-    $root = '/home/u169457691/domains/apptesting.in';
+    $root = '/home/u169457691/domains/apptesting.in/public_html/devithor-backend';
 
     // 1. Create .user.ini to force OPcache timestamp checking
     $userIni = "opcache.revalidate_freq=0\n";
@@ -113,7 +113,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 $repo   = 'jatayumedia01-web/lmsapp';
 $branch = 'main';
-$root   = '/home/u169457691/domains/apptesting.in';
+$root   = '/home/u169457691/domains/apptesting.in/public_html/devithor-backend';
 
 // All tracked files — add new ones here when needed
 $files = [
