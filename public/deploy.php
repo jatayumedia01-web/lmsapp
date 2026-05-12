@@ -122,6 +122,7 @@ $files = [
     'public/deploy.php',
     'public/.htaccess',
     'public/exam-admin.php',
+    'public/debug-exam.php',
     'src/Router.php',
     'src/Database.php',
     'src/Request.php',
