@@ -3,9 +3,19 @@ if (($_GET['key'] ?? '') !== 'devithor2026') {
     http_response_code(403); exit('Forbidden');
 }
 
+// Locate bootstrap.php regardless of whether deploy.php lives in public_html/ or devithor-backend/public/
+function devithor_bootstrap(): string {
+    $candidates = [
+        __DIR__ . '/../src/bootstrap.php',               // devithor-backend/public/deploy.php
+        __DIR__ . '/devithor-backend/src/bootstrap.php', // public_html/deploy.php
+    ];
+    foreach ($candidates as $p) { if (file_exists($p)) return $p; }
+    http_response_code(500); exit("bootstrap.php not found\n");
+}
+
 // ── MIGRATE action — runs pending SQL migrations ──────────────────────────────
 if (($_GET['action'] ?? '') === 'migrate') {
-    require __DIR__ . '/../src/bootstrap.php';
+    require devithor_bootstrap();
     header('Content-Type: text/plain');
     $stmts = [
         'pin_hash column'     => "ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(255) NULL",
@@ -89,8 +99,7 @@ PHP;
 
 // ── WIPE action — deletes all dummy courses from DB ───────────────────────────
 if (($_GET['action'] ?? '') === 'wipe') {
-    // Use the app's own bootstrap — it loads .env correctly
-    require __DIR__ . '/../src/bootstrap.php';
+    require devithor_bootstrap();
     header('Content-Type: text/plain');
     try {
         $pdo = Devithor\Database::pdo();
@@ -317,6 +326,16 @@ $htWritten = file_put_contents($htDest, $newHt);
 $results[] = $htWritten !== false
     ? ['status'=>'ok','file'=>'public/.htaccess (direct)','msg'=>"$htWritten bytes — exam route added"]
     : ['status'=>'fail','file'=>'public/.htaccess (direct)','msg'=>'WRITE FAILED'];
+
+// Self-update: keep public_html/deploy.php in sync so future migrate/wipe also work.
+$selfServing = dirname($root) . '/deploy.php'; // public_html/deploy.php
+$selfSource  = $root . '/public/deploy.php';   // just-deployed copy
+if ($selfServing !== $selfSource && file_exists($selfSource) && is_writable(dirname($selfServing))) {
+    $copied = copy($selfSource, $selfServing);
+    $results[] = $copied
+        ? ['status' => 'ok',   'file' => 'deploy.php (self-sync)', 'msg' => 'public_html/deploy.php updated']
+        : ['status' => 'fail', 'file' => 'deploy.php (self-sync)', 'msg' => 'copy failed'];
+}
 
 ?><!DOCTYPE html>
 <html>
