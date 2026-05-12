@@ -494,6 +494,30 @@ ob_start();
     <?php endif; ?>
 </div>
 
+<?php if (!empty($captureAttempts)): ?>
+<div class="card" style="border:1px solid #ef4444;margin-top:24px">
+    <h3 style="color:#ef4444;display:flex;align-items:center;gap:8px">
+        ⚠ Screen Recording Violations
+        <span style="background:#ef4444;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700"><?= count($captureAttempts) ?></span>
+        <?php if ((int)($user['is_banned'] ?? 0) === 1): ?>
+            <span style="background:#7f1d1d;color:#fca5a5;border-radius:99px;padding:2px 10px;font-size:12px;margin-left:4px">AUTO-SUSPENDED</span>
+        <?php endif; ?>
+    </h3>
+    <table class="table" style="margin-bottom:0">
+        <thead><tr><th>Time</th><th>Lesson ID</th></tr></thead>
+        <tbody>
+        <?php foreach ($captureAttempts as $a): ?>
+            <?php $props = json_decode((string)($a['props_json'] ?? '{}'), true) ?? []; ?>
+            <tr>
+                <td class="text-muted"><?= htmlspecialchars((string)$a['occurred_at']) ?></td>
+                <td class="text-muted"><?= htmlspecialchars($props['lesson_id'] ?? '—') ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
+
 <?php
 $content = ob_get_clean();
 $title   = $user['full_name'];

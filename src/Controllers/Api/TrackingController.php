@@ -41,6 +41,12 @@ final class TrackingController
         $stored = $this->insertEvent($user['id'], $sessionId, $devicePk, $event);
         $this->touchUserAndSession($user['id'], $sessionId);
 
+        // Auto-suspend on repeated screen capture violations.
+        $eventName = trim((string) ($body['event'] ?? $body['name'] ?? ''));
+        if ($eventName === 'screen_capture_attempt') {
+            $this->checkAndSuspendForCapture($user['id']);
+        }
+
         Response::json(['ok' => true, 'event_id' => $stored, 'device_pk' => $devicePk]);
     }
 
@@ -259,6 +265,24 @@ final class TrackingController
                      events_count = events_count + ?
                  WHERE id = ? AND user_id = ?',
                 [$eventCount, $sessionId, $userId],
+            );
+        }
+    }
+
+    private function checkAndSuspendForCapture(string $userId): void
+    {
+        $attempts = (int) Database::scalar(
+            'SELECT COUNT(*) FROM user_events
+             WHERE user_id = ? AND event_name = "screen_capture_attempt"
+             AND occurred_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)',
+            [$userId],
+        );
+        if ($attempts >= 3) {
+            Database::exec(
+                'UPDATE users SET is_banned = 1, banned_at = NOW(),
+                  banned_reason = "Repeated screen recording violations (auto)"
+                 WHERE id = ? AND is_banned = 0',
+                [$userId],
             );
         }
     }

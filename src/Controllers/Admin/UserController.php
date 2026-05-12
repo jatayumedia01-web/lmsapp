@@ -135,12 +135,20 @@ final class UserController
             [$user['id']],
         );
 
+        $captureAttempts = Database::all(
+            'SELECT occurred_at, props_json FROM user_events
+             WHERE user_id = ? AND event_name = "screen_capture_attempt"
+             ORDER BY occurred_at DESC LIMIT 20',
+            [$user['id']],
+        );
+
         Response::html(View::render('admin/users/show', [
             'user'              => $user,
             'sub'               => $sub,
             'stats'             => $stats,
             'invoices'          => $invoices,
             'recentEnrollments' => $recentEnrollments,
+            'captureAttempts'   => $captureAttempts,
             'me'                => $req->params['user'],
             'page'              => 'users',
             'flash'             => $this->popFlash(),
