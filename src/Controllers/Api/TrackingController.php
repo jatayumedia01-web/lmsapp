@@ -75,7 +75,21 @@ final class TrackingController
         $user = $req->params['user'];
         $body = $req->body;
 
-        $devicePk = $this->upsertDeviceIfPresent($user['id'], (array) ($body['device'] ?? []));
+        // Accept device info either nested under 'device' key or merged at root level.
+        $deviceData = !empty($body['device']) ? (array) $body['device'] : [];
+        if (empty($deviceData['device_id']) && !empty($body['device_id'])) {
+            $deviceData = array_merge($deviceData, [
+                'device_id'   => $body['device_id'],
+                'platform'    => $body['platform']    ?? 'ANDROID',
+                'app_version' => $body['app_version'] ?? null,
+                'model'       => $body['device']['model']        ?? null,
+                'manufacturer'=> $body['device']['manufacturer'] ?? null,
+                'os_name'     => $body['device']['os_name']      ?? null,
+                'os_version'  => $body['device']['os_version']   ?? null,
+                'device_type' => $body['device']['device_type']  ?? 'phone',
+            ]);
+        }
+        $devicePk = $this->upsertDeviceIfPresent($user['id'], $deviceData);
         $ip       = Geolocation::clientIp();
         $geo      = Geolocation::lookup($ip);
         $sessionId = isset($body['session_id'])
