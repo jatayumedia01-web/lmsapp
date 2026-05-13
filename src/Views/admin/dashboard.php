@@ -54,6 +54,18 @@ ob_start();
         <div class="stat-label">Doubts posted</div>
         <div class="stat-value" id="stat-questions"><?= number_format($stats['questions']) ?></div>
     </a>
+    <div class="stat" style="cursor:default">
+        <div class="stat-label">👍 Helpful %</div>
+        <div class="stat-value" id="stat-helpful-pct"><?= $feedbackStats['helpful_pct'] ?>%</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px" id="stat-feedback-total"><?= number_format($feedbackStats['total']) ?> ratings</div>
+    </div>
+    <?php if ($pendingQuestions > 0): ?>
+    <a class="stat" href="/admin/qa" style="border:1.5px solid #f59e0b">
+        <div class="stat-label" style="color:#f59e0b">⚠ Pending review</div>
+        <div class="stat-value" id="stat-pending" style="color:#f59e0b"><?= number_format($pendingQuestions) ?></div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">questions</div>
+    </a>
+    <?php endif; ?>
 </div>
 
 <div class="grid-2">
@@ -80,6 +92,28 @@ ob_start();
             </table>
         <?php endif; ?>
         </div>
+    </div>
+
+    <div class="card">
+        <h3>Recent lesson feedback</h3>
+        <?php if (empty($recentFeedback)): ?>
+            <p class="text-muted">No feedback yet — students will rate lessons from the app.</p>
+        <?php else: ?>
+            <div style="display:flex;flex-direction:column;gap:12px">
+            <?php foreach ($recentFeedback as $fb): ?>
+                <div style="padding:10px 14px;border-radius:8px;background:#1a1a2e;border-left:3px solid <?= $fb['helpful'] ? '#22c55e' : '#ef4444' ?>">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                        <span style="font-size:14px"><?= $fb['helpful'] ? '👍' : '👎' ?></span>
+                        <strong style="font-size:13px;color:#e2e8f0"><?= View::e($fb['full_name']) ?></strong>
+                        <span style="color:#6b7280;font-size:11px">·</span>
+                        <span style="color:#6b7280;font-size:11px"><?= View::e($fb['lesson_title']) ?></span>
+                    </div>
+                    <p style="margin:0;font-size:12px;color:#94a3b8"><?= View::e($fb['comment']) ?></p>
+                    <div style="font-size:10px;color:#6b7280;margin-top:4px"><?= date('M j, g:i a', strtotime((string)$fb['updated_at'])) ?></div>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="card">
@@ -145,6 +179,16 @@ ob_start();
                     const el = document.getElementById(id);
                     if (el) animateStat(el, data.stats[key]);
                 });
+                if (data.feedbackStats) {
+                    const pctEl = document.getElementById('stat-helpful-pct');
+                    const totEl = document.getElementById('stat-feedback-total');
+                    if (pctEl) pctEl.textContent = data.feedbackStats.helpful_pct + '%';
+                    if (totEl) totEl.textContent = data.feedbackStats.total.toLocaleString() + ' ratings';
+                }
+                if (data.pendingQuestions !== undefined) {
+                    const pEl = document.getElementById('stat-pending');
+                    if (pEl) animateStat(pEl, data.pendingQuestions);
+                }
 
                 const badge = document.getElementById('online-badge');
                 if (badge) {

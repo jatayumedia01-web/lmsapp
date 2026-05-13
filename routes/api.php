@@ -17,6 +17,7 @@ use Devithor\Controllers\Api\TrackingController;
 use Devithor\Controllers\Api\QuizController as ApiQuiz;
 use Devithor\Controllers\Api\NoteController as ApiNote;
 use Devithor\Controllers\Api\ExamApiController as ApiExam;
+use Devithor\Controllers\Api\LessonInteractionController as ApiInteraction;
 use Devithor\Controllers\Api\NotificationApiController as ApiNotif;
 
 // ── Health ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,14 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
     $r->get('/lessons/{id}/playback',          [LessonController::class, 'playback']);
     $r->post('/lessons/{id}/track-playback',   [LessonController::class, 'trackPlayback']);
     $r->get('/lessons/{id}',                   [LessonController::class, 'show']);
+
+    // ── Lesson feedback + Q&A ─────────────────────────────────────────────────
+    $r->post('/lessons/{id}/feedback',         [ApiInteraction::class, 'submitFeedback']);
+    $r->get('/lessons/{id}/questions',         [ApiInteraction::class, 'listQuestions']);
+    $r->post('/lessons/{id}/questions',        [ApiInteraction::class, 'postQuestion']);
+    $r->post('/questions/{id}/answers',        [ApiInteraction::class, 'postAnswer']);
+    $r->post('/questions/{id}/vote',           [ApiInteraction::class, 'voteQuestion']);
+    $r->post('/answers/{id}/vote',             [ApiInteraction::class, 'voteAnswer']);
 
     // ── Tracking ──────────────────────────────────────────────────────────────
     $r->post('/track/event',         [TrackingController::class, 'singleEvent']);
