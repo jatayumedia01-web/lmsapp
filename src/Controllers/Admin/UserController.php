@@ -165,7 +165,7 @@ final class UserController
         // Kill any live API tokens so the ban is immediate.
         Database::exec('DELETE FROM auth_tokens WHERE user_id = ?', [$req->params['id']]);
         $this->setFlash('User banned and signed out everywhere.', 'success');
-        Response::redirect('/admin/users/' . urlencode($req->params['id']));
+        Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
     }
 
     public function unban(Request $req): never
@@ -175,7 +175,7 @@ final class UserController
             [$req->params['id']],
         );
         $this->setFlash('User unbanned.', 'success');
-        Response::redirect('/admin/users/' . urlencode($req->params['id']));
+        Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
     }
 
     public function changeRole(Request $req): never
@@ -183,17 +183,17 @@ final class UserController
         $newRole = (string) $req->input('role', 'STUDENT');
         if (!in_array($newRole, ['STUDENT', 'INSTRUCTOR', 'ADMIN', 'PARENT'], true)) {
             $this->setFlash('Invalid role.', 'error');
-            Response::redirect('/admin/users/' . urlencode($req->params['id']));
+            Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
         }
         // Don't let an admin demote themselves and lock everyone out.
         $me = $req->params['user'];
         if ($me['id'] === $req->params['id'] && $newRole !== 'ADMIN') {
             $this->setFlash("You can't demote yourself — ask another admin.", 'error');
-            Response::redirect('/admin/users/' . urlencode($req->params['id']));
+            Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
         }
         Database::exec('UPDATE users SET role = ? WHERE id = ?', [$newRole, $req->params['id']]);
         $this->setFlash("Role updated to $newRole.", 'success');
-        Response::redirect('/admin/users/' . urlencode($req->params['id']));
+        Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
     }
 
     public function delete(Request $req): never
@@ -201,7 +201,7 @@ final class UserController
         $me = $req->params['user'];
         if ($me['id'] === $req->params['id']) {
             $this->setFlash("You can't delete your own account from here.", 'error');
-            Response::redirect('/admin/users/' . urlencode($req->params['id']));
+            Response::redirect('/admin/users/' . rawurlencode($req->params['id']));
         }
         Database::exec('DELETE FROM users WHERE id = ?', [$req->params['id']]);
         $this->setFlash('User deleted (cascades removed enrollments, Q&A, etc.).', 'success');

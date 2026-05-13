@@ -31,7 +31,7 @@ ob_start();
     </div>
     <?php if ($mode === 'edit'): ?>
         <div class="spacer"></div>
-        <a href="/admin/lessons/<?= View::e(urlencode($lesson['id'])) ?>/video" class="btn btn-secondary">📺 Preview &amp; analytics</a>
+        <a href="/admin/lessons/<?= View::e(rawurlencode($lesson['id'])) ?>/video" class="btn btn-secondary">📺 Preview &amp; analytics</a>
     <?php endif; ?>
 </header>
 

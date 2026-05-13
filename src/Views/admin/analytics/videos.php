@@ -102,7 +102,7 @@ ob_start();
                 <td class="text-right"><?= (int) round((float) $r['avg_pct']) ?>%</td>
                 <td class="text-right text-muted"><?= View::e($dur((int) $r['total_seconds'])) ?></td>
                 <td class="text-right">
-                    <a href="/admin/lessons/<?= View::e(urlencode($r['id'])) ?>/video" class="btn btn-ghost btn-sm">Open →</a>
+                    <a href="/admin/lessons/<?= View::e(rawurlencode($r['id'])) ?>/video" class="btn btn-ghost btn-sm">Open →</a>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -134,7 +134,7 @@ ob_start();
                     <small class="text-muted"><?= (int) round((float) $r['avg_pct']) ?>%</small>
                 </td>
                 <td class="text-right">
-                    <a href="/admin/lessons/<?= View::e(urlencode($r['id'])) ?>/video" class="btn btn-ghost btn-sm">Diagnose →</a>
+                    <a href="/admin/lessons/<?= View::e(rawurlencode($r['id'])) ?>/video" class="btn btn-ghost btn-sm">Diagnose →</a>
                 </td>
             </tr>
         <?php endforeach; ?>

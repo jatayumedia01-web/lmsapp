@@ -50,9 +50,9 @@ ob_start();
                 <?php endif; ?>
             </td>
             <td class="text-right">
-                <a href="/admin/quizzes/<?= View::e(urlencode($r['id'])) ?>/questions" class="btn btn-secondary btn-sm">Questions</a>
-                <a href="/admin/quizzes/<?= View::e(urlencode($r['id'])) ?>/attempts" class="btn btn-ghost btn-sm">Attempts</a>
-                <a href="/admin/quizzes/<?= View::e(urlencode($r['id'])) ?>" class="btn btn-ghost btn-sm">Edit</a>
+                <a href="/admin/quizzes/<?= View::e(rawurlencode($r['id'])) ?>/questions" class="btn btn-secondary btn-sm">Questions</a>
+                <a href="/admin/quizzes/<?= View::e(rawurlencode($r['id'])) ?>/attempts" class="btn btn-ghost btn-sm">Attempts</a>
+                <a href="/admin/quizzes/<?= View::e(rawurlencode($r['id'])) ?>" class="btn btn-ghost btn-sm">Edit</a>
             </td>
         </tr>
     <?php endforeach; ?>

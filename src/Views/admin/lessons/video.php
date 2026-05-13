@@ -27,7 +27,7 @@ ob_start();
         <p class="text-muted"><?= View::e($course['title']) ?> · video preview &amp; analytics</p>
     </div>
     <div class="spacer"></div>
-    <a href="/admin/lessons/<?= View::e(urlencode($lesson['id'])) ?>" class="btn btn-secondary btn-sm">Edit lesson →</a>
+    <a href="/admin/lessons/<?= View::e(rawurlencode($lesson['id'])) ?>" class="btn btn-secondary btn-sm">Edit lesson →</a>
 </header>
 
 <?php if ($flash): ?>
@@ -65,7 +65,7 @@ ob_start();
         <?php else: ?>
             <div style="padding:36px;text-align:center;color:var(--text-muted)">
                 <p>No previewable video set yet.</p>
-                <p><a href="/admin/lessons/<?= View::e(urlencode($lesson['id'])) ?>" class="btn btn-primary btn-sm">Add a video URL →</a></p>
+                <p><a href="/admin/lessons/<?= View::e(rawurlencode($lesson['id'])) ?>" class="btn btn-primary btn-sm">Add a video URL →</a></p>
             </div>
         <?php endif; ?>
     </div>
@@ -123,7 +123,7 @@ ob_start();
         <?php foreach ($recentViews as $v): ?>
             <tr>
                 <td>
-                    <a href="/admin/users/<?= View::e(urlencode($v['user_id'])) ?>"><?= View::e($v['full_name'] ?? $v['user_id']) ?></a>
+                    <a href="/admin/users/<?= View::e(rawurlencode($v['user_id'])) ?>"><?= View::e($v['full_name'] ?? $v['user_id']) ?></a>
                     <div class="text-muted" style="font-size:11px"><?= View::e((string) ($v['email'] ?? '')) ?></div>
                 </td>
                 <td class="text-muted" style="font-size:12px"><?= View::e(substr((string) $v['started_at'], 0, 16)) ?></td>

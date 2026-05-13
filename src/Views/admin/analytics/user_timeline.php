@@ -19,7 +19,7 @@ ob_start();
 ?>
 <header>
     <div>
-        <p><a href="/admin/users/<?= View::e(urlencode($user['id'])) ?>">← Back to user</a></p>
+        <p><a href="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>">← Back to user</a></p>
         <h2>Activity · <?= View::e($user['full_name']) ?></h2>
         <p class="text-muted"><?= View::e($user['email']) ?></p>
     </div>

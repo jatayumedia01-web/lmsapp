@@ -6,7 +6,7 @@
 /** @var string $page */
 use Devithor\View;
 
-$action  = $mode === 'create' ? '/admin/billing/plans' : '/admin/billing/plans/' . $plan['id'];
+$action  = $mode === 'create' ? '/admin/billing/plans' : '/admin/billing/plans/' . rawurlencode((string)($plan['id'] ?? ''));
 $heading = $mode === 'create' ? 'New plan' : 'Edit plan';
 
 // Convert features_json (array or string) to a textarea-friendly newline list.
@@ -171,7 +171,7 @@ ob_start();
 </form>
 
 <?php if ($mode === 'edit'): ?>
-    <form id="plan-delete-form" method="post" action="/admin/billing/plans/<?= View::e($plan['id']) ?>/delete" style="display:none"></form>
+    <form id="plan-delete-form" method="post" action="/admin/billing/plans/<?= View::e(rawurlencode((string)($plan['id'] ?? ''))) ?>/delete" style="display:none"></form>
 <?php endif; ?>
 <?php
 $content = ob_get_clean();

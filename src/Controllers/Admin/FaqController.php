@@ -24,7 +24,7 @@ final class FaqController
         $answer   = trim((string) $req->input('answer', ''));
         if ($question === '' || $answer === '') {
             $this->setFlash('Question and answer are both required.', 'error');
-            Response::redirect('/admin/lessons/' . urlencode($lessonId));
+            Response::redirect('/admin/lessons/' . rawurlencode($lessonId));
         }
         $next = (int) Database::scalar(
             'SELECT COALESCE(MAX(order_index), -1) + 1 FROM lesson_faqs WHERE lesson_id = ?',
@@ -36,7 +36,7 @@ final class FaqController
             [$lessonId, $question, $answer, $next],
         );
         $this->setFlash('FAQ added.', 'success');
-        Response::redirect('/admin/lessons/' . urlencode($lessonId) . '#faqs');
+        Response::redirect('/admin/lessons/' . rawurlencode($lessonId) . '#faqs');
     }
 
     public function update(Request $req): never
@@ -48,14 +48,14 @@ final class FaqController
         $answer   = trim((string) $req->input('answer', ''));
         if ($question === '' || $answer === '') {
             $this->setFlash('Question and answer cannot be blank.', 'error');
-            Response::redirect('/admin/lessons/' . urlencode((string) $faq['lesson_id']) . '#faqs');
+            Response::redirect('/admin/lessons/' . rawurlencode((string) $faq['lesson_id']) . '#faqs');
         }
         Database::exec(
             'UPDATE lesson_faqs SET question = ?, answer = ?, is_published = ? WHERE id = ?',
             [$question, $answer, $req->input('is_published') ? 1 : 0, (int) $req->params['id']],
         );
         $this->setFlash('FAQ updated.', 'success');
-        Response::redirect('/admin/lessons/' . urlencode((string) $faq['lesson_id']) . '#faqs');
+        Response::redirect('/admin/lessons/' . rawurlencode((string) $faq['lesson_id']) . '#faqs');
     }
 
     public function delete(Request $req): never
@@ -64,7 +64,7 @@ final class FaqController
         if (!$faq) Response::notFound();
         Database::exec('DELETE FROM lesson_faqs WHERE id = ?', [(int) $req->params['id']]);
         $this->setFlash('FAQ deleted.', 'success');
-        Response::redirect('/admin/lessons/' . urlencode((string) $faq['lesson_id']) . '#faqs');
+        Response::redirect('/admin/lessons/' . rawurlencode((string) $faq['lesson_id']) . '#faqs');
     }
 
     public function reorder(Request $req): never
@@ -84,7 +84,7 @@ final class FaqController
             Database::exec('UPDATE lesson_faqs SET order_index = ? WHERE id = ?', [(int) $neighbour['order_index'], (int) $faq['id']]);
             Database::exec('UPDATE lesson_faqs SET order_index = ? WHERE id = ?', [$current, (int) $neighbour['id']]);
         }
-        Response::redirect('/admin/lessons/' . urlencode((string) $faq['lesson_id']) . '#faqs');
+        Response::redirect('/admin/lessons/' . rawurlencode((string) $faq['lesson_id']) . '#faqs');
     }
 
     private function setFlash(string $message, string $kind = 'success'): void

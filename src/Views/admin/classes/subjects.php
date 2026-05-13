@@ -22,7 +22,7 @@ ob_start();
     </div>
     <div class="spacer"></div>
     <a href="/admin/classes/<?= View::e($class['id']) ?>" class="btn btn-ghost btn-sm">Edit class</a>
-    <a href="/admin/courses/new?class_id=<?= View::e(urlencode($class['id'])) ?>" class="btn btn-primary">+ New subject</a>
+    <a href="/admin/courses/new?class_id=<?= View::e(rawurlencode($class['id'])) ?>" class="btn btn-primary">+ New subject</a>
 </header>
 
 <?php if ($flash): ?>
@@ -31,7 +31,7 @@ ob_start();
 
 <?php if (empty($subjects)): ?>
     <div class="card">
-        <p>No subjects in this class yet. <a href="/admin/courses/new?class_id=<?= View::e(urlencode($class['id'])) ?>">Add the first subject</a> — Mathematics, Physics, etc.</p>
+        <p>No subjects in this class yet. <a href="/admin/courses/new?class_id=<?= View::e(rawurlencode($class['id'])) ?>">Add the first subject</a> — Mathematics, Physics, etc.</p>
     </div>
 <?php else: ?>
 <table class="table">

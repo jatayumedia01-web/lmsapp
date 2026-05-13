@@ -69,12 +69,12 @@ ob_start();
 
 <!-- ── Quick actions ────────────────────────────────────────────────────────── -->
 <div class="flex-row" style="margin-bottom:20px;flex-wrap:wrap;gap:8px">
-    <a href="/admin/users/<?= View::e(urlencode($user['id'])) ?>/activity" class="btn btn-secondary btn-sm">Activity timeline</a>
-    <a href="/admin/analytics/events?user_id=<?= View::e(urlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Event log</a>
-    <a href="/admin/analytics/logins?user_id=<?= View::e(urlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Login history</a>
+    <a href="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/activity" class="btn btn-secondary btn-sm">Activity timeline</a>
+    <a href="/admin/analytics/events?user_id=<?= View::e(rawurlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Event log</a>
+    <a href="/admin/analytics/logins?user_id=<?= View::e(rawurlencode($user['id'])) ?>" class="btn btn-ghost btn-sm">Login history</a>
 
     <?php if ((int) ($user['is_banned'] ?? 0)): ?>
-        <form method="post" action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/unban" style="margin:0">
+        <form method="post" action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/unban" style="margin:0">
             <button type="submit" class="btn btn-secondary btn-sm">Unban user</button>
         </form>
     <?php else: ?>
@@ -85,7 +85,7 @@ ob_start();
     <?php endif; ?>
 
     <?php if ($me['id'] !== $user['id']): ?>
-        <form method="post" action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/delete" style="margin:0">
+        <form method="post" action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/delete" style="margin:0">
             <button type="submit" class="btn btn-danger btn-sm"
                     data-confirm="Permanently delete <?= View::e(addslashes($user['full_name'])) ?>? This removes all their enrollments, Q&A and payment history.">
                 Delete user
@@ -115,7 +115,7 @@ ob_start();
 <div id="ban-form" style="display:none;margin-bottom:16px">
     <div class="card" style="border-left:4px solid var(--danger,#dc2626)">
         <h4 style="margin-top:0">Ban user</h4>
-        <form method="post" action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/ban">
+        <form method="post" action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/ban">
             <div class="field">
                 <label>Reason (optional)</label>
                 <input name="reason" type="text" placeholder="e.g. Spamming Q&amp;A, harassment" style="max-width:400px">
@@ -257,7 +257,7 @@ ob_start();
                         <td style="padding:6px 0;color:var(--text-muted)">Class ID</td>
                         <td style="padding:6px 0">
                             <?php if (!empty($user['class_id'])): ?>
-                                <a href="/admin/classes/<?= View::e(urlencode($user['class_id'])) ?>">
+                                <a href="/admin/classes/<?= View::e(rawurlencode($user['class_id'])) ?>">
                                     <?= View::e($user['class_id']) ?>
                                 </a>
                             <?php else: ?>
@@ -319,7 +319,7 @@ ob_start();
         <div class="card">
             <h3 style="margin-top:0;margin-bottom:16px">Role management</h3>
             <form method="post"
-                  action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/role"
+                  action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/role"
                   class="flex-row" style="gap:8px;align-items:flex-end">
                 <div class="field" style="flex:1;margin-bottom:0">
                     <label style="font-size:12px;margin-bottom:4px;display:block">Current role</label>
@@ -359,7 +359,7 @@ ob_start();
                 <p class="text-muted" style="font-size:13px;margin:0 0 12px">
                     This user is currently banned. Unbanning restores full access.
                 </p>
-                <form method="post" action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/unban">
+                <form method="post" action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/unban">
                     <button type="submit" class="btn btn-secondary btn-sm">Unban user</button>
                 </form>
             <?php endif; ?>
@@ -369,7 +369,7 @@ ob_start();
                 <p class="text-muted" style="font-size:13px;margin:0 0 12px">
                     Deleting permanently removes the user and all their enrollments, Q&amp;A, invoices, and certificates.
                 </p>
-                <form method="post" action="/admin/users/<?= View::e(urlencode($user['id'])) ?>/delete">
+                <form method="post" action="/admin/users/<?= View::e(rawurlencode($user['id'])) ?>/delete">
                     <button type="submit" class="btn btn-danger btn-sm"
                             data-confirm="Permanently delete <?= View::e(addslashes($user['full_name'])) ?>? This cannot be undone.">
                         Delete user
@@ -451,7 +451,7 @@ ob_start();
                     <tr>
                         <td>
                             <?php if (!empty($e['course_id'])): ?>
-                                <a href="/admin/courses/<?= View::e(urlencode($e['course_id'])) ?>">
+                                <a href="/admin/courses/<?= View::e(rawurlencode($e['course_id'])) ?>">
                                     <?= View::e($e['course_title'] ?? $e['course_id']) ?>
                                 </a>
                             <?php else: ?>

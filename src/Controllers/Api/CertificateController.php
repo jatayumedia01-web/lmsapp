@@ -29,7 +29,7 @@ final class CertificateController
                 'course_title'       => $r['course_title_snapshot'],
                 'score_pct'          => $r['score_pct'] !== null ? (float) $r['score_pct'] : null,
                 'issued_at'          => $r['issued_at'],
-                'verify_url'         => 'https://apptesting.in/verify/' . urlencode((string) $r['certificate_number']),
+                'verify_url'         => 'https://apptesting.in/verify/' . rawurlencode((string) $r['certificate_number']),
                 'template_name'      => $r['template_name'] ?? 'Default',
             ], $rows),
         ]);

@@ -45,7 +45,7 @@ ob_start();
     <h3>Moderation</h3>
     <div class="flex-row" style="gap:8px;flex-wrap:wrap">
         <?php foreach (['APPROVED','REJECTED','SPAM','PENDING'] as $s): ?>
-            <form method="post" action="/admin/qa/<?= View::e(urlencode($question['id'])) ?>/status" style="display:inline">
+            <form method="post" action="/admin/qa/<?= View::e(rawurlencode($question['id'])) ?>/status" style="display:inline">
                 <input type="hidden" name="status" value="<?= $s ?>">
                 <input type="hidden" name="back" value="show">
                 <button type="submit" class="btn btn-secondary btn-sm" <?= $question['moderation_status'] === $s ? 'disabled' : '' ?>>
@@ -54,12 +54,12 @@ ob_start();
             </form>
         <?php endforeach; ?>
 
-        <form method="post" action="/admin/qa/<?= View::e(urlencode($question['id'])) ?>/pin" style="display:inline">
+        <form method="post" action="/admin/qa/<?= View::e(rawurlencode($question['id'])) ?>/pin" style="display:inline">
             <button type="submit" class="btn btn-ghost btn-sm">
                 <?= ((int) $question['is_pinned']) ? 'Unpin' : 'Pin' ?>
             </button>
         </form>
-        <form method="post" action="/admin/qa/<?= View::e(urlencode($question['id'])) ?>/resolve" style="display:inline">
+        <form method="post" action="/admin/qa/<?= View::e(rawurlencode($question['id'])) ?>/resolve" style="display:inline">
             <button type="submit" class="btn btn-ghost btn-sm">
                 <?= ((int) $question['is_resolved']) ? 'Mark unresolved' : 'Mark resolved' ?>
             </button>
@@ -67,7 +67,7 @@ ob_start();
 
         <div class="spacer"></div>
 
-        <form method="post" action="/admin/qa/<?= View::e(urlencode($question['id'])) ?>/delete" style="display:inline">
+        <form method="post" action="/admin/qa/<?= View::e(rawurlencode($question['id'])) ?>/delete" style="display:inline">
             <button type="submit" class="btn btn-danger btn-sm" data-confirm="Permanently delete this question and all its answers?">Delete</button>
         </form>
     </div>
@@ -92,7 +92,7 @@ ob_start();
                     <span class="text-muted" style="font-size:11px">· <?= View::e(substr((string) $a['created_at'], 0, 16)) ?></span>
                     <div class="spacer"></div>
                     <span class="text-muted">👍 <?= (int) $a['like_count'] ?> · 👎 <?= (int) $a['dislike_count'] ?></span>
-                    <form method="post" action="/admin/qa/answers/<?= View::e(urlencode($a['id'])) ?>/delete" style="display:inline;margin-left:8px">
+                    <form method="post" action="/admin/qa/answers/<?= View::e(rawurlencode($a['id'])) ?>/delete" style="display:inline;margin-left:8px">
                         <button type="submit" class="btn btn-danger btn-sm" data-confirm="Delete this answer?">Delete</button>
                     </form>
                 </div>

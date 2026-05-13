@@ -55,7 +55,7 @@ ob_start();
     <?php foreach ($rows as $r): ?>
         <tr>
             <td>
-                <a href="/admin/users/<?= View::e(urlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
+                <a href="/admin/users/<?= View::e(rawurlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
                 <div class="text-muted" style="font-size:11px"><?= View::e($r['email'] ?? '') ?></div>
             </td>
             <td><code><?= View::e($r['plan_id']) ?></code></td>
@@ -66,7 +66,7 @@ ob_start();
             </td>
             <td class="text-right">
                 <?php if ($r['status'] !== 'CANCELLED'): ?>
-                    <form method="post" action="/admin/billing/subscriptions/<?= View::e(urlencode($r['user_id'])) ?>/cancel" style="display:inline">
+                    <form method="post" action="/admin/billing/subscriptions/<?= View::e(rawurlencode($r['user_id'])) ?>/cancel" style="display:inline">
                         <button type="submit" class="btn btn-ghost btn-sm" data-confirm="Cancel this subscription?">Cancel</button>
                     </form>
                 <?php endif; ?>

@@ -9,7 +9,7 @@ ob_start();
 ?>
 <header>
     <div>
-        <p><a href="/admin/quizzes/<?= View::e(urlencode($quiz['id'])) ?>">← Back to quiz</a></p>
+        <p><a href="/admin/quizzes/<?= View::e(rawurlencode($quiz['id'])) ?>">← Back to quiz</a></p>
         <h2><?= View::e($quiz['title']) ?> · Attempts</h2>
     </div>
 </header>
@@ -33,7 +33,7 @@ ob_start();
     <?php foreach ($rows as $r): ?>
         <tr>
             <td>
-                <a href="/admin/users/<?= View::e(urlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
+                <a href="/admin/users/<?= View::e(rawurlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
                 <div class="text-muted" style="font-size:11px"><?= View::e((string) ($r['email'] ?? '')) ?></div>
             </td>
             <td class="text-muted" style="font-size:12px"><?= View::e(substr((string) $r['started_at'], 0, 16)) ?></td>

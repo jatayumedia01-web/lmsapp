@@ -97,7 +97,7 @@ ob_start();
             <td class="text-muted"><?= View::e(substr((string) $u['joined_at'], 0, 10)) ?></td>
             <td class="text-muted"><?= View::e($u['last_sign_in_at'] ? substr((string) $u['last_sign_in_at'], 0, 10) : '—') ?></td>
             <td class="text-right">
-                <a href="/admin/users/<?= View::e(urlencode($u['id'])) ?>" class="btn btn-secondary btn-sm">Open</a>
+                <a href="/admin/users/<?= View::e(rawurlencode($u['id'])) ?>" class="btn btn-secondary btn-sm">Open</a>
             </td>
         </tr>
     <?php endforeach; ?>

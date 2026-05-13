@@ -21,7 +21,7 @@ ob_start();
 
 <nav class="tabs">
     <?php foreach ($groups as $key => $label): ?>
-        <a href="?group=<?= urlencode($key) ?>" class="tab <?= $group === $key ? 'active' : '' ?>"><?= View::e($label) ?></a>
+        <a href="?group=<?= rawurlencode($key) ?>" class="tab <?= $group === $key ? 'active' : '' ?>"><?= View::e($label) ?></a>
     <?php endforeach; ?>
 </nav>
 

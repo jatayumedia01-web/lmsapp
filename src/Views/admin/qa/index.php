@@ -105,7 +105,7 @@ ob_start();
             </td>
             <td class="text-right"><?= (int) $r['like_count'] ?> / <?= (int) $r['answer_count'] ?></td>
             <td class="text-right">
-                <a href="/admin/qa/<?= View::e(urlencode($r['id'])) ?>" class="btn btn-secondary btn-sm">Open</a>
+                <a href="/admin/qa/<?= View::e(rawurlencode($r['id'])) ?>" class="btn btn-secondary btn-sm">Open</a>
             </td>
         </tr>
     <?php endforeach; ?>

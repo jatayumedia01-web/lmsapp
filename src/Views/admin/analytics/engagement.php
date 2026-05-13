@@ -195,7 +195,7 @@ ob_start();
                 <td class="text-right"><?= number_format((int) $u['events_count']) ?></td>
                 <td class="text-right text-muted"><?= View::e($dur((int) $u['total_seconds'])) ?></td>
                 <td class="text-right">
-                    <a href="/admin/users/<?= View::e(urlencode((string) $u['id'])) ?>/activity" class="btn btn-ghost btn-sm">Activity →</a>
+                    <a href="/admin/users/<?= View::e(rawurlencode((string) $u['id'])) ?>/activity" class="btn btn-ghost btn-sm">Activity →</a>
                 </td>
             </tr>
         <?php endforeach; ?>

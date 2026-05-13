@@ -50,7 +50,7 @@ ob_start();
             </td>
             <td>
                 <?php if (!empty($r['user_id'])): ?>
-                    <a href="/admin/users/<?= View::e(urlencode((string) $r['user_id'])) ?>">
+                    <a href="/admin/users/<?= View::e(rawurlencode((string) $r['user_id'])) ?>">
                         <?= View::e((string) ($r['full_name'] ?? $r['user_id'])) ?>
                     </a>
                 <?php else: ?>

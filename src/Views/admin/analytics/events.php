@@ -63,7 +63,7 @@ ob_start();
                 <?= View::e(substr((string) $r['occurred_at'], 0, 19)) ?>
             </td>
             <td>
-                <a href="/admin/users/<?= View::e(urlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
+                <a href="/admin/users/<?= View::e(rawurlencode($r['user_id'])) ?>"><?= View::e($r['full_name'] ?? $r['user_id']) ?></a>
                 <div class="text-muted" style="font-size:11px"><?= View::e((string) ($r['email'] ?? '')) ?></div>
             </td>
             <td><code><?= View::e($r['event_name']) ?></code></td>

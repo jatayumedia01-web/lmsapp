@@ -21,7 +21,7 @@ ob_start();
     </div>
     <?php if ($mode === 'edit'): ?>
         <div class="spacer"></div>
-        <a href="/admin/quizzes/<?= View::e(urlencode($quiz['id'])) ?>/questions" class="btn btn-secondary">Manage questions →</a>
+        <a href="/admin/quizzes/<?= View::e(rawurlencode($quiz['id'])) ?>/questions" class="btn btn-secondary">Manage questions →</a>
     <?php endif; ?>
 </header>
 

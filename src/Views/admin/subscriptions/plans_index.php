@@ -51,7 +51,7 @@ ob_start();
                 <?php endif; ?>
             </td>
             <td class="text-right">
-                <a href="/admin/billing/plans/<?= View::e(urlencode($p['id'])) ?>" class="btn btn-secondary btn-sm">Edit</a>
+                <a href="/admin/billing/plans/<?= View::e(rawurlencode($p['id'])) ?>" class="btn btn-secondary btn-sm">Edit</a>
             </td>
         </tr>
     <?php endforeach; ?>

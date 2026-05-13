@@ -124,7 +124,7 @@ final class QAController
         );
         $this->setFlash("Question marked $newStatus.", 'success');
         Response::redirect($req->input('back') === 'show'
-            ? '/admin/qa/' . urlencode($req->params['id'])
+            ? '/admin/qa/' . rawurlencode($req->params['id'])
             : '/admin/qa');
     }
 
@@ -158,7 +158,7 @@ final class QAController
             [$req->params['id']],
         );
         $this->setFlash('Pin toggled.', 'success');
-        Response::redirect('/admin/qa/' . urlencode($req->params['id']));
+        Response::redirect('/admin/qa/' . rawurlencode($req->params['id']));
     }
 
     public function toggleResolved(Request $req): never
@@ -168,7 +168,7 @@ final class QAController
             [$req->params['id']],
         );
         $this->setFlash('Resolved flag toggled.', 'success');
-        Response::redirect('/admin/qa/' . urlencode($req->params['id']));
+        Response::redirect('/admin/qa/' . rawurlencode($req->params['id']));
     }
 
     public function delete(Request $req): never
@@ -184,7 +184,7 @@ final class QAController
         Database::exec('DELETE FROM lesson_answers WHERE id = ?', [$req->params['id']]);
         $this->setFlash('Answer deleted.', 'success');
         Response::redirect($answer
-            ? '/admin/qa/' . urlencode($answer['question_id'])
+            ? '/admin/qa/' . rawurlencode($answer['question_id'])
             : '/admin/qa');
     }
 

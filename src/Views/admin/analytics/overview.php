@@ -505,7 +505,7 @@ ob_start();
                     <?php endif; ?>
                 </td>
                 <td class="text-right">
-                    <a href="/admin/users/<?= View::e(urlencode((string) $e['user_id'])) ?>" class="btn btn-ghost btn-sm">Open</a>
+                    <a href="/admin/users/<?= View::e(rawurlencode((string) $e['user_id'])) ?>" class="btn btn-ghost btn-sm">Open</a>
                 </td>
             </tr>
         <?php endforeach; ?>

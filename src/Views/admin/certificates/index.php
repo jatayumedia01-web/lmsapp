@@ -59,7 +59,7 @@ ob_start();
                     <tr>
                         <td><code style="font-size:11px"><?= View::e($c['certificate_number']) ?></code></td>
                         <td>
-                            <a href="/admin/users/<?= View::e(urlencode((string) $c['user_id'])) ?>"><?= View::e($c['user_name_snapshot']) ?></a>
+                            <a href="/admin/users/<?= View::e(rawurlencode((string) $c['user_id'])) ?>"><?= View::e($c['user_name_snapshot']) ?></a>
                         </td>
                         <td><?= View::e((string) ($c['course_title_snapshot'] ?? '—')) ?></td>
                         <td class="text-muted" style="font-size:11px"><?= View::e(substr((string) $c['issued_at'], 0, 10)) ?></td>

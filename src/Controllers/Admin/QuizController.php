@@ -77,7 +77,7 @@ final class QuizController
             ],
         );
         $this->setFlash('Quiz created. Now add questions.', 'success');
-        Response::redirect('/admin/quizzes/' . urlencode($id) . '/questions');
+        Response::redirect('/admin/quizzes/' . rawurlencode($id) . '/questions');
     }
 
     public function showEdit(Request $req): never
@@ -123,7 +123,7 @@ final class QuizController
             ],
         );
         $this->setFlash('Quiz updated.', 'success');
-        Response::redirect('/admin/quizzes/' . urlencode($req->params['id']));
+        Response::redirect('/admin/quizzes/' . rawurlencode($req->params['id']));
     }
 
     public function delete(Request $req): never
@@ -163,7 +163,7 @@ final class QuizController
         $text = trim((string) $req->input('question_text', ''));
         if ($text === '') {
             $this->setFlash('Question text required.', 'error');
-            Response::redirect('/admin/quizzes/' . urlencode((string) $quiz['id']) . '/questions');
+            Response::redirect('/admin/quizzes/' . rawurlencode((string) $quiz['id']) . '/questions');
         }
 
         $optionsJson = null;
@@ -187,7 +187,7 @@ final class QuizController
             }
             if (count($opts) < 2) {
                 $this->setFlash('At least two options needed.', 'error');
-                Response::redirect('/admin/quizzes/' . urlencode((string) $quiz['id']) . '/questions');
+                Response::redirect('/admin/quizzes/' . rawurlencode((string) $quiz['id']) . '/questions');
             }
             $optionsJson = json_encode($opts);
         } else { // SHORT, FILL
@@ -215,7 +215,7 @@ final class QuizController
             ],
         );
         $this->setFlash('Question added.', 'success');
-        Response::redirect('/admin/quizzes/' . urlencode((string) $quiz['id']) . '/questions');
+        Response::redirect('/admin/quizzes/' . rawurlencode((string) $quiz['id']) . '/questions');
     }
 
     public function questionDelete(Request $req): never
@@ -224,7 +224,7 @@ final class QuizController
         if (!$q) Response::notFound();
         Database::exec('DELETE FROM quiz_questions WHERE id = ?', [(int) $req->params['id']]);
         $this->setFlash('Question deleted.', 'success');
-        Response::redirect('/admin/quizzes/' . urlencode((string) $q['quiz_id']) . '/questions');
+        Response::redirect('/admin/quizzes/' . rawurlencode((string) $q['quiz_id']) . '/questions');
     }
 
     public function questionReorder(Request $req): never
@@ -243,7 +243,7 @@ final class QuizController
             Database::exec('UPDATE quiz_questions SET order_index = ? WHERE id = ?', [(int) $neighbour['order_index'], (int) $q['id']]);
             Database::exec('UPDATE quiz_questions SET order_index = ? WHERE id = ?', [$cur, (int) $neighbour['id']]);
         }
-        Response::redirect('/admin/quizzes/' . urlencode((string) $q['quiz_id']) . '/questions');
+        Response::redirect('/admin/quizzes/' . rawurlencode((string) $q['quiz_id']) . '/questions');
     }
 
     /** Per-quiz attempts list (admin diagnostic). */

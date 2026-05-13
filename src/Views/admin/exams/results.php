@@ -24,7 +24,7 @@
 <?php foreach ($attempts as $a): ?>
 <tr>
     <td>
-        <a href="/admin/users/<?= View::e(urlencode($a['user_id'])) ?>"><?= View::e($a['full_name']) ?></a>
+        <a href="/admin/users/<?= View::e(rawurlencode($a['user_id'])) ?>"><?= View::e($a['full_name']) ?></a>
         <div style="font-size:12px;color:#6b7280"><?= View::e($a['email']) ?></div>
     </td>
     <td><strong><?= (int)$a['score'] ?></strong><span class="text-muted">/<?= (int)$a['total_marks'] ?></span></td>

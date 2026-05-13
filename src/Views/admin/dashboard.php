@@ -83,7 +83,7 @@ ob_start();
                 <tbody id="learners-tbody">
                 <?php foreach ($recentLearners as $l): ?>
                     <tr>
-                        <td><a href="/admin/users/<?= View::e(urlencode($l['id'])) ?>"><?= View::e($l['full_name']) ?></a></td>
+                        <td><a href="/admin/users/<?= View::e(rawurlencode($l['id'])) ?>"><?= View::e($l['full_name']) ?></a></td>
                         <td class="text-muted"><?= View::e($l['email']) ?></td>
                         <td class="text-muted"><?= date('M j', strtotime((string) $l['joined_at'])) ?></td>
                     </tr>

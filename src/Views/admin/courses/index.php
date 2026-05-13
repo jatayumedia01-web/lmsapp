@@ -15,7 +15,7 @@ ob_start();
         <p>Each subject is a learning track inside a class. Lessons live inside subjects.</p>
     </div>
     <div class="spacer"></div>
-    <a href="/admin/courses/new<?= $classId !== '' ? '?class_id=' . urlencode($classId) : '' ?>" class="btn btn-primary">+ New subject</a>
+    <a href="/admin/courses/new<?= $classId !== '' ? '?class_id=' . rawurlencode($classId) : '' ?>" class="btn btn-primary">+ New subject</a>
 </header>
 
 <?php if ($flash): ?>
@@ -39,7 +39,7 @@ ob_start();
 
 <?php if (empty($courses)): ?>
     <div class="card">
-        <p>No subjects <?= $classId !== '' ? 'in this class' : 'yet' ?>. <a href="/admin/courses/new<?= $classId !== '' ? '?class_id=' . urlencode($classId) : '' ?>">Create one</a>.</p>
+        <p>No subjects <?= $classId !== '' ? 'in this class' : 'yet' ?>. <a href="/admin/courses/new<?= $classId !== '' ? '?class_id=' . rawurlencode($classId) : '' ?>">Create one</a>.</p>
     </div>
 <?php else: ?>
     <table class="table">

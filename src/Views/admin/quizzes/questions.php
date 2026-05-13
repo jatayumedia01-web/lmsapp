@@ -9,7 +9,7 @@ ob_start();
 ?>
 <header>
     <div>
-        <p><a href="/admin/quizzes/<?= View::e(urlencode($quiz['id'])) ?>">← Back to quiz settings</a></p>
+        <p><a href="/admin/quizzes/<?= View::e(rawurlencode($quiz['id'])) ?>">← Back to quiz settings</a></p>
         <h2><?= View::e($quiz['title']) ?> · Questions</h2>
         <p class="text-muted"><?= count($questions) ?> question<?= count($questions) === 1 ? '' : 's' ?> · pass at <?= (int) $quiz['pass_score_pct'] ?>%</p>
     </div>
@@ -66,7 +66,7 @@ ob_start();
 <!-- Add new question -->
 <div class="card">
     <h3 style="margin-bottom:8px">+ Add question</h3>
-    <form method="post" action="/admin/quizzes/<?= View::e(urlencode($quiz['id'])) ?>/questions" id="add-question-form">
+    <form method="post" action="/admin/quizzes/<?= View::e(rawurlencode($quiz['id'])) ?>/questions" id="add-question-form">
         <div class="field-row">
             <div class="field">
                 <label>Type</label>

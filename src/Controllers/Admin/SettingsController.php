@@ -94,7 +94,7 @@ final class SettingsController
         }
 
         $this->setFlash("Saved $updated setting(s).", 'success');
-        Response::redirect('/admin/settings?group=' . urlencode($group));
+        Response::redirect('/admin/settings?group=' . rawurlencode($group));
     }
 
     private function normaliseJson(string $raw): string
