@@ -83,6 +83,7 @@ $router->group('/admin', [Auth::requireAdmin()], function ($r) {
 
     // ---- Billing -----------------------------------------------------
     $r->get('/billing',                          [AdminBilling::class, 'overview']);
+    $r->get('/billing/invoices/{id}',            [AdminBilling::class, 'invoiceView']);
     $r->get('/billing/subscriptions',            [AdminBilling::class, 'subscriptionsIndex']);
     $r->post('/billing/subscriptions/{userId}/cancel', [AdminBilling::class, 'cancelSubscription']);
     $r->post('/billing/invoices/{id}/refund',    [AdminBilling::class, 'refundInvoice']);

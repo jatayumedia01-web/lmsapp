@@ -325,19 +325,50 @@ final class BillingApiController
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    // ── Invoice HTML (authenticated — for user to download their own invoice) ────
+
+    public function invoiceHtml(Request $req): never
+    {
+        $user    = $req->params['user'];
+        $inv     = Database::one(
+            'SELECT i.*, u.full_name AS user_name, u.email AS user_email
+             FROM invoices i JOIN users u ON u.id = i.user_id
+             WHERE i.id = ? AND i.user_id = ?',
+            [$req->params['id'], $user['id']],
+        );
+        if (!$inv) Response::json(['error' => 'Not found'], 404);
+
+        $inv['customer_name']  = $inv['customer_name'] ?? $inv['user_name'];
+        $inv['customer_email'] = $inv['customer_email'] ?? $inv['user_email'];
+        $company    = $this->companySettings();
+        $fiscalYear = $this->fiscalYear();
+
+        ob_start();
+        include __DIR__ . '/../../Views/billing/invoice.php';
+        $html = ob_get_clean();
+        header('Content-Type: text/html; charset=UTF-8');
+        echo $html;
+        exit;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private function activateSubscription(
         string $userId, string $planId, string $cycle,
         ?string $couponId, int $discountCents, int $amountCents,
         string $gatewayPaymentId = '',
     ): string {
-        $plan     = Database::one('SELECT * FROM subscription_plans WHERE id = ?', [$planId]);
-        $now      = (int) (microtime(true) * 1000);
+        $plan      = Database::one('SELECT * FROM subscription_plans WHERE id = ?', [$planId]);
+        $user      = Database::one('SELECT full_name, email FROM users WHERE id = ?', [$userId]);
+        $settings  = $this->settings();
+        $now       = (int) (microtime(true) * 1000);
         $trialDays = (int) ($plan['trial_days'] ?? 0);
-        $status   = $trialDays > 0 ? 'TRIALING' : 'ACTIVE';
-        $periodMs = $cycle === 'YEARLY' ? 365 * 86400 * 1000 : 30 * 86400 * 1000;
-        $renewsAt = $now + $periodMs;
-        $trialEnd = $trialDays > 0 ? $now + ($trialDays * 86400 * 1000) : null;
+        $status    = $trialDays > 0 ? 'TRIALING' : 'ACTIVE';
+        $periodMs  = $cycle === 'YEARLY' ? 365 * 86400 * 1000 : 30 * 86400 * 1000;
+        $renewsAt  = $now + $periodMs;
+        $trialEnd  = $trialDays > 0 ? $now + ($trialDays * 86400 * 1000) : null;
 
+        // ── Subscription upsert ─────────────────────────────────────────────
         $existing = Database::one('SELECT user_id FROM subscriptions WHERE user_id = ?', [$userId]);
         if ($existing) {
             Database::exec(
@@ -354,23 +385,107 @@ final class BillingApiController
             );
         }
 
+        // ── GST calculation ─────────────────────────────────────────────────
+        $gstApplicable = (bool) ($plan['is_gst_applicable'] ?? true);
+        $gstPercent    = $gstApplicable ? (float) ($plan['gst_percent'] ?? 18.0) : 0.0;
+        $gstInclusive  = (bool) ($plan['is_gst_inclusive'] ?? true);
+        $sacCode       = (string) ($plan['sac_code'] ?? '998314');
+        $gstType       = $gstApplicable
+            ? (string) ($settings['invoice_gst_type'] ?? 'CGST_SGST')
+            : 'EXEMPT';
+
+        [$subtotalCents, $cgstCents, $sgstCents, $igstCents] = $this->computeGst(
+            $amountCents, $gstPercent, $gstInclusive, $gstType,
+        );
+
+        // ── Sequential invoice number ───────────────────────────────────────
+        $fy      = $this->fiscalYear();
+        $prefix  = (string) ($settings['invoice_prefix'] ?? 'INV');
+        $invNo   = $this->nextInvoiceNumber($prefix, $fy);
+
+        // ── Invoice insert ──────────────────────────────────────────────────
         $invoiceId = 'inv_' . bin2hex(random_bytes(8));
-        $invNo     = 'INV-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        $currency  = (string) ($plan['currency'] ?: 'INR');
+
         Database::exec(
-            'INSERT INTO invoices (id, user_id, number, date_millis, amount_cents, currency, status,
-             plan_name, billing_cycle_label, period_start_millis, period_end_millis, payment_method_last4)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+            'INSERT INTO invoices
+             (id, user_id, number, date_millis, amount_cents, currency, status,
+              plan_name, billing_cycle_label, period_start_millis, period_end_millis,
+              payment_method_last4, subtotal_cents, gst_percent, cgst_cents, sgst_cents,
+              igst_cents, gst_type, sac_code,
+              customer_name, customer_email, notes)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
             [
-                $invoiceId, $userId, $invNo, $now, $amountCents,
-                (string) ($plan['currency'] ?: 'INR'),
+                $invoiceId, $userId, $invNo, $now, $amountCents, $currency,
                 'PAID',
                 (string) $plan['name'],
                 $cycle === 'YEARLY' ? 'Annual' : 'Monthly',
                 $now, $renewsAt,
                 $gatewayPaymentId ? substr($gatewayPaymentId, -4) : null,
+                $subtotalCents,
+                $gstPercent > 0 ? $gstPercent : null,
+                $cgstCents, $sgstCents, $igstCents,
+                $gstApplicable ? $gstType : 'EXEMPT',
+                $sacCode,
+                (string) ($user['full_name'] ?? ''),
+                (string) ($user['email'] ?? ''),
+                (string) ($settings['invoice_terms'] ?? ''),
             ],
         );
         return $invoiceId;
+    }
+
+    private function computeGst(int $amountCents, float $gstPercent, bool $inclusive, string $gstType): array
+    {
+        if ($gstPercent <= 0 || $gstType === 'EXEMPT') {
+            return [$amountCents, 0, 0, 0];
+        }
+        if ($inclusive) {
+            $subtotal = (int) round($amountCents / (1 + $gstPercent / 100));
+            $gstTotal = $amountCents - $subtotal;
+        } else {
+            $subtotal = $amountCents;
+            $gstTotal = (int) round($amountCents * $gstPercent / 100);
+        }
+        if ($gstType === 'CGST_SGST') {
+            $half = intdiv($gstTotal, 2);
+            return [$subtotal, $half, $gstTotal - $half, 0];
+        }
+        return [$subtotal, 0, 0, $gstTotal]; // IGST
+    }
+
+    private function nextInvoiceNumber(string $prefix, string $fy): string
+    {
+        try {
+            Database::exec(
+                'INSERT INTO invoice_counter (year_key, last_seq) VALUES (?, 1)
+                 ON DUPLICATE KEY UPDATE last_seq = last_seq + 1',
+                [$fy],
+            );
+            $seq = (int) Database::scalar('SELECT last_seq FROM invoice_counter WHERE year_key = ?', [$fy]);
+            return $prefix . '/' . $fy . '/' . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        } catch (\Throwable $e) {
+            return $prefix . '-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        }
+    }
+
+    private function fiscalYear(): string
+    {
+        $month = (int) date('n');
+        $year  = (int) date('Y');
+        return $month >= 4
+            ? $year . '-' . substr((string) ($year + 1), 2)
+            : ($year - 1) . '-' . substr((string) $year, 2);
+    }
+
+    private function companySettings(): array
+    {
+        try {
+            $rows = Database::all("SELECT `key`, value FROM app_settings WHERE `group` = 'company'");
+            return array_column($rows, 'value', 'key');
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     private function resolveCoupon(string $code, string $userId): ?array

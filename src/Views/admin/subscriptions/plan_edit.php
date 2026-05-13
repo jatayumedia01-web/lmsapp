@@ -126,6 +126,29 @@ ob_start();
         <small class="text-muted">Stored as a JSON array — line breaks become entries.</small>
     </div>
 
+    <div style="background:#1e293b;border-radius:8px;padding:16px 20px;margin-bottom:16px">
+        <p style="color:#94a3b8;font-size:12px;margin:0 0 12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">GST / Tax Settings</p>
+        <div class="field-row">
+            <div class="field">
+                <label><input type="checkbox" name="is_gst_applicable" value="1" <?= ((int)($plan['is_gst_applicable'] ?? 1)) ? 'checked' : '' ?>> GST applicable on this plan</label>
+            </div>
+            <div class="field">
+                <label><input type="checkbox" name="is_gst_inclusive" value="1" <?= ((int)($plan['is_gst_inclusive'] ?? 1)) ? 'checked' : '' ?>> Price is GST-inclusive</label>
+                <small class="text-muted">If checked, GST is extracted from the plan price (e.g. ₹590 includes 18% GST → ₹500 + ₹90 GST). If unchecked, GST is added on top.</small>
+            </div>
+            <div class="field">
+                <label>GST % (default 18)</label>
+                <input name="gst_percent" type="number" min="0" max="28" step="0.01" value="<?= number_format((float)($plan['gst_percent'] ?? 18), 2) ?>">
+                <small class="text-muted">Common rates: 0%, 5%, 12%, 18%, 28%</small>
+            </div>
+            <div class="field">
+                <label>SAC Code</label>
+                <input name="sac_code" type="text" value="<?= View::e($plan['sac_code'] ?? '998314') ?>" maxlength="10">
+                <small class="text-muted">998314 = IT/SaaS services</small>
+            </div>
+        </div>
+    </div>
+
     <div class="field">
         <label><input type="checkbox" name="is_active" value="1" <?= ((int) $plan['is_active']) ? 'checked' : '' ?>> Active (selectable in app)</label>
     </div>

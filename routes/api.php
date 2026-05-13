@@ -103,6 +103,7 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
     $r->post('/billing/cancel',                        [ApiBilling::class, 'cancel']);
     $r->post('/billing/resume',                        [ApiBilling::class, 'resume']);
     $r->get('/billing/invoices',                       [ApiBilling::class, 'invoices']);
+    $r->get('/billing/invoices/{id}/html',             [ApiBilling::class, 'invoiceHtml']);
     $r->post('/billing/coupons/validate',              [ApiBilling::class, 'validateCoupon']);
     $r->get('/billing/payment-methods',                [ApiBilling::class, 'paymentMethods']);
     $r->post('/billing/payment-methods',               [ApiBilling::class, 'addPaymentMethod']);

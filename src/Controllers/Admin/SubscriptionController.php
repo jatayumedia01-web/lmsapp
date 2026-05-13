@@ -143,6 +143,34 @@ final class SubscriptionController
         Response::redirect('/admin/billing');
     }
 
+    public function invoiceView(Request $req): never
+    {
+        $inv = Database::one(
+            'SELECT i.*, u.full_name AS user_name, u.email AS user_email
+             FROM invoices i LEFT JOIN users u ON u.id = i.user_id
+             WHERE i.id = ?',
+            [$req->params['id']],
+        );
+        if (!$inv) Response::notFound();
+
+        $inv['customer_name']  = $inv['customer_name'] ?? $inv['user_name'];
+        $inv['customer_email'] = $inv['customer_email'] ?? $inv['user_email'];
+
+        try {
+            $companyRows = Database::all("SELECT `key`, value FROM app_settings WHERE `group` = 'company'");
+            $company     = array_column($companyRows, 'value', 'key');
+        } catch (\Throwable) {
+            $company = [];
+        }
+
+        $month     = (int) date('n'); $year = (int) date('Y');
+        $fiscalYear = $month >= 4 ? $year.'-'.substr((string)($year+1),2) : ($year-1).'-'.substr((string)$year,2);
+
+        header('Content-Type: text/html; charset=UTF-8');
+        include __DIR__ . '/../../Views/billing/invoice.php';
+        exit;
+    }
+
     // ---- Plans CRUD ------------------------------------------------------
 
     public function plansIndex(Request $req): never
@@ -186,8 +214,9 @@ final class SubscriptionController
              (id, name, description, price_monthly_cents, price_yearly_cents, currency,
               trial_days, features_json, sort_order, is_active, is_default,
               price_monthly_offer_cents, price_yearly_offer_cents, offer_label, offer_ends_at,
-              plan_type, bundle_description)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              plan_type, bundle_description,
+              gst_percent, is_gst_applicable, is_gst_inclusive, sac_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id, $data['name'], $data['description'],
                 (int) $data['price_monthly_cents'], (int) $data['price_yearly_cents'],
@@ -197,6 +226,8 @@ final class SubscriptionController
                 $data['price_monthly_offer_cents'], $data['price_yearly_offer_cents'],
                 $data['offer_label'], $data['offer_ends_at'],
                 $data['plan_type'], $data['bundle_description'],
+                $data['gst_percent'], $data['is_gst_applicable'],
+                $data['is_gst_inclusive'], $data['sac_code'],
             ],
         );
         $this->setFlash('Plan created.', 'success');
@@ -240,7 +271,8 @@ final class SubscriptionController
                 sort_order = ?, is_active = ?, is_default = ?,
                 price_monthly_offer_cents = ?, price_yearly_offer_cents = ?,
                 offer_label = ?, offer_ends_at = ?,
-                plan_type = ?, bundle_description = ?
+                plan_type = ?, bundle_description = ?,
+                gst_percent = ?, is_gst_applicable = ?, is_gst_inclusive = ?, sac_code = ?
              WHERE id = ?',
             [
                 $data['name'], $data['description'],
@@ -251,6 +283,8 @@ final class SubscriptionController
                 $data['price_monthly_offer_cents'], $data['price_yearly_offer_cents'],
                 $data['offer_label'], $data['offer_ends_at'],
                 $data['plan_type'], $data['bundle_description'],
+                $data['gst_percent'], $data['is_gst_applicable'],
+                $data['is_gst_inclusive'], $data['sac_code'],
                 $req->params['id'],
             ],
         );
@@ -377,6 +411,8 @@ final class SubscriptionController
             'currency' => 'INR', 'trial_days' => 0,
             'features_json' => "Unlimited courses\nDownloads\nCertificates",
             'sort_order' => 0, 'is_active' => 1, 'is_default' => 0,
+            'gst_percent' => 18.0, 'is_gst_applicable' => 1,
+            'is_gst_inclusive' => 1, 'sac_code' => '998314',
         ];
     }
 
@@ -412,6 +448,10 @@ final class SubscriptionController
             'sort_order'                => (int) $req->input('sort_order', 0),
             'is_active'                 => $req->input('is_active') ? 1 : 0,
             'is_default'                => $req->input('is_default') ? 1 : 0,
+            'gst_percent'               => max(0, (float) ($req->input('gst_percent') ?? 18)),
+            'is_gst_applicable'         => $req->input('is_gst_applicable') ? 1 : 0,
+            'is_gst_inclusive'          => $req->input('is_gst_inclusive') ? 1 : 0,
+            'sac_code'                  => trim((string) ($req->input('sac_code') ?? '998314')) ?: '998314',
         ];
     }
 
