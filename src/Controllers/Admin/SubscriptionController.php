@@ -184,14 +184,19 @@ final class SubscriptionController
         Database::exec(
             'INSERT INTO subscription_plans
              (id, name, description, price_monthly_cents, price_yearly_cents, currency,
-              trial_days, features_json, sort_order, is_active, is_default)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              trial_days, features_json, sort_order, is_active, is_default,
+              price_monthly_offer_cents, price_yearly_offer_cents, offer_label, offer_ends_at,
+              plan_type, bundle_description)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id, $data['name'], $data['description'],
                 (int) $data['price_monthly_cents'], (int) $data['price_yearly_cents'],
                 $data['currency'], (int) $data['trial_days'],
                 $this->normaliseFeatures($data['features_json']),
                 (int) $data['sort_order'], (int) $data['is_active'], (int) $data['is_default'],
+                $data['price_monthly_offer_cents'], $data['price_yearly_offer_cents'],
+                $data['offer_label'], $data['offer_ends_at'],
+                $data['plan_type'], $data['bundle_description'],
             ],
         );
         $this->setFlash('Plan created.', 'success');
@@ -232,7 +237,10 @@ final class SubscriptionController
             'UPDATE subscription_plans SET
                 name = ?, description = ?, price_monthly_cents = ?, price_yearly_cents = ?,
                 currency = ?, trial_days = ?, features_json = ?,
-                sort_order = ?, is_active = ?, is_default = ?
+                sort_order = ?, is_active = ?, is_default = ?,
+                price_monthly_offer_cents = ?, price_yearly_offer_cents = ?,
+                offer_label = ?, offer_ends_at = ?,
+                plan_type = ?, bundle_description = ?
              WHERE id = ?',
             [
                 $data['name'], $data['description'],
@@ -240,6 +248,9 @@ final class SubscriptionController
                 $data['currency'], (int) $data['trial_days'],
                 $this->normaliseFeatures($data['features_json']),
                 (int) $data['sort_order'], (int) $data['is_active'], (int) $data['is_default'],
+                $data['price_monthly_offer_cents'], $data['price_yearly_offer_cents'],
+                $data['offer_label'], $data['offer_ends_at'],
+                $data['plan_type'], $data['bundle_description'],
                 $req->params['id'],
             ],
         );
@@ -360,6 +371,9 @@ final class SubscriptionController
         return [
             'id' => '', 'name' => '', 'description' => '',
             'price_monthly_cents' => 0, 'price_yearly_cents' => 0,
+            'price_monthly_offer_cents' => null, 'price_yearly_offer_cents' => null,
+            'offer_label' => null, 'offer_ends_at' => null,
+            'plan_type' => 'INDIVIDUAL', 'bundle_description' => null,
             'currency' => 'INR', 'trial_days' => 0,
             'features_json' => "Unlimited courses\nDownloads\nCertificates",
             'sort_order' => 0, 'is_active' => 1, 'is_default' => 0,
@@ -377,18 +391,27 @@ final class SubscriptionController
 
     private function assemblePlan(Request $req): array
     {
+        $offerMonthly = (string) $req->input('price_monthly_offer_cents', '');
+        $offerYearly  = (string) $req->input('price_yearly_offer_cents', '');
+        $offerEnds    = trim((string) $req->input('offer_ends_at', ''));
         return [
-            'id'                  => trim((string) $req->input('id', '')),
-            'name'                => trim((string) $req->input('name', '')),
-            'description'         => trim((string) $req->input('description', '')),
-            'price_monthly_cents' => (int) $req->input('price_monthly_cents', 0),
-            'price_yearly_cents'  => (int) $req->input('price_yearly_cents', 0),
-            'currency'            => strtoupper(trim((string) $req->input('currency', 'INR'))),
-            'trial_days'          => (int) $req->input('trial_days', 0),
-            'features_json'       => (string) $req->input('features_json', ''),
-            'sort_order'          => (int) $req->input('sort_order', 0),
-            'is_active'           => $req->input('is_active') ? 1 : 0,
-            'is_default'          => $req->input('is_default') ? 1 : 0,
+            'id'                        => trim((string) $req->input('id', '')),
+            'name'                      => trim((string) $req->input('name', '')),
+            'description'               => trim((string) $req->input('description', '')),
+            'price_monthly_cents'       => (int) $req->input('price_monthly_cents', 0),
+            'price_yearly_cents'        => (int) $req->input('price_yearly_cents', 0),
+            'price_monthly_offer_cents' => ($offerMonthly !== '' && (int) $offerMonthly > 0) ? (int) $offerMonthly : null,
+            'price_yearly_offer_cents'  => ($offerYearly !== '' && (int) $offerYearly > 0) ? (int) $offerYearly : null,
+            'offer_label'               => trim((string) ($req->input('offer_label') ?? '')) ?: null,
+            'offer_ends_at'             => ($offerEnds !== '') ? date('Y-m-d H:i:s', strtotime($offerEnds)) : null,
+            'plan_type'                 => (string) ($req->input('plan_type') ?? 'INDIVIDUAL'),
+            'bundle_description'        => trim((string) ($req->input('bundle_description') ?? '')) ?: null,
+            'currency'                  => strtoupper(trim((string) $req->input('currency', 'INR'))),
+            'trial_days'                => (int) $req->input('trial_days', 0),
+            'features_json'             => (string) $req->input('features_json', ''),
+            'sort_order'                => (int) $req->input('sort_order', 0),
+            'is_active'                 => $req->input('is_active') ? 1 : 0,
+            'is_default'                => $req->input('is_default') ? 1 : 0,
         ];
     }
 

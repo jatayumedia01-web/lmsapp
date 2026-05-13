@@ -17,6 +17,7 @@ use Devithor\Controllers\Api\TrackingController;
 use Devithor\Controllers\Api\QuizController as ApiQuiz;
 use Devithor\Controllers\Api\NoteController as ApiNote;
 use Devithor\Controllers\Api\ExamApiController as ApiExam;
+use Devithor\Controllers\Api\BillingApiController as ApiBilling;
 use Devithor\Controllers\Api\LessonInteractionController as ApiInteraction;
 use Devithor\Controllers\Api\NotificationApiController as ApiNotif;
 
@@ -92,6 +93,21 @@ $router->group('/api/v1', [Auth::requireUser()], function ($r) {
 
     // ── Certificates ──────────────────────────────────────────────────────────
     $r->get('/my-certificates',              [ApiCert::class, 'myList']);
+
+    // ── Billing / Subscriptions ───────────────────────────────────────────────
+    $r->get('/billing/plans',                          [ApiBilling::class, 'plans']);
+    $r->get('/billing/subscription',                   [ApiBilling::class, 'subscription']);
+    $r->post('/billing/subscribe',                     [ApiBilling::class, 'subscribe']);
+    $r->post('/billing/init-payment',                  [ApiBilling::class, 'initPayment']);
+    $r->post('/billing/verify-payment',                [ApiBilling::class, 'verifyPayment']);
+    $r->post('/billing/cancel',                        [ApiBilling::class, 'cancel']);
+    $r->post('/billing/resume',                        [ApiBilling::class, 'resume']);
+    $r->get('/billing/invoices',                       [ApiBilling::class, 'invoices']);
+    $r->post('/billing/coupons/validate',              [ApiBilling::class, 'validateCoupon']);
+    $r->get('/billing/payment-methods',                [ApiBilling::class, 'paymentMethods']);
+    $r->post('/billing/payment-methods',               [ApiBilling::class, 'addPaymentMethod']);
+    $r->post('/billing/payment-methods/{id}/delete',   [ApiBilling::class, 'removePaymentMethod']);
+    $r->post('/billing/payment-methods/{id}/default',  [ApiBilling::class, 'setDefaultPaymentMethod']);
 
     // ── Mock Exams ────────────────────────────────────────────────────────────
     $r->get('/exams',                                [ApiExam::class, 'list']);
